@@ -10,10 +10,10 @@
 hostname = %APPEND% api.memrise.com, app.memrise.com
 
 [Script]
-http-response ^https?://(api|app)\.memrise\.com/v1\.25/me/?$ script-path=https://raw.githubusercontent.com/gist/raw/e737d767af93ec5d42bb3477587c938e/memrise.js, requires-body=true, timeout=30, tag=Memrise - 用户资料
-http-response ^https?://api\.memrise\.com/v1\.25/me/subscriptions/?$ script-path=https://raw.githubusercontent.com/gist/raw/e737d767af93ec5d42bb3477587c938e/memrise.js, requires-body=true, timeout=30, tag=Memrise - 订阅
-http-response ^https?://api\.memrise\.com/v1\.25/me/language_pairs/\d+/features/availability/ script-path=https://raw.githubusercontent.com/gist/raw/e737d767af93ec5d42bb3477587c938e/memrise.js, requires-body=true, timeout=30, tag=Memrise - 功能解锁
-http-response ^https?://api\.memrise\.com/v1\.25/language_pairs/\d+/buddies/ script-path=https://raw.githubusercontent.com/gist/raw/e737d767af93ec5d42bb3477587c938e/memrise.js, requires-body=true, timeout=30, tag=Memrise - 小伙伴
-http-response ^https?://api\.memrise\.com/v1\.25/me/language_pairs/\d+/media/\d+/ script-path=https://raw.githubusercontent.com/gist/raw/e737d767af93ec5d42bb3477587c938e/memrise.js, requires-body=true, timeout=30, tag=Memrise - 视频
-http-response ^https?://(api|app)\.memrise\.com/v1\.25/?/membot/\d+/missions/[^/]+/?$ script-path=https://raw.githubusercontent.com/gist/raw/e737d767af93ec5d42bb3477587c938e/memrise.js, requires-body=true, timeout=30, tag=Memrise - 无限对话
-http-response ^https?://(api|app)\.memrise\.com/v1\.25/?/membot/\d+/missions/[^/]+/goal/ script-path=https://raw.githubusercontent.com/gist/raw/e737d767af93ec5d42bb3477587c938e/memrise.js, requires-body=true, timeout=30, tag=Memrise - 消息限制
+http-response ^https?://(api|app)\.memrise\.com/v1\.25/me/?$ script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Memrise/memrise.js, requires-body=true, timeout=30, tag=Memrise - 用户资料
+http-response ^https?://api\.memrise\.com/v1\.25/me/subscriptions/?$ script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Memrise/memrise.js, requires-body=true, timeout=30, tag=Memrise - 订阅
+http-response ^https?://api\.memrise\.com/v1\.25/me/language_pairs/\d+/features/availability/ script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Memrise/memrise.js, requires-body=true, timeout=30, tag=Memrise - 功能解锁
+http-response ^https?://api\.memrise\.com/v1\.25/language_pairs/\d+/buddies/ script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Memrise/memrise.js, requires-body=true, timeout=30, tag=Memrise - 小伙伴
+http-response ^https?://api\.memrise\.com/v1\.25/me/language_pairs/\d+/media/\d+/ script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Memrise/memrise.js, requires-body=true, timeout=30, tag=Memrise - 视频
+http-response ^https?://(api|app)\.memrise\.com/v1\.25/?/membot/\d+/missions/[^/]+/?$ script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Memrise/memrise.js, requires-body=true, timeout=30, tag=Memrise - 无限对话
+http-response ^https?://(api|app)\.memrise\.com/v1\.25/?/membot/\d+/missions/[^/]+/goal/ script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Memrise/memrise.js, requires-body=true, timeout=30, tag=Memrise - 消息限制
