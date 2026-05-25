@@ -1,4 +1,4 @@
-// Cake Premium Unlock v1.3 - Loon Script
+// Cake Premium Unlock v1.4 - Loon Script
 // 全覆盖: api.mycake.me + api.cakeapp.me
 // v1.3: 修复POST /gw/heart导致的心形问题
 

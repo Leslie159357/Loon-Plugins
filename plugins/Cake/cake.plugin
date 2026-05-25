@@ -1,10 +1,10 @@
 #!name=Cake Premium Unlock
-#!desc=Cake 会员解锁 v1.3 - 内嵌脚本（不依赖外链）
+#!desc=Cake 会员解锁 v1.4 - 修复puzzle心形count
 #!home=https://github.com/Leslie159357/Loon-Plugins
 #!icon=https://static-mycake.pstatic.net/image/img_2309221549/1695607693176
 #!author=Leslie159357
 #!date=2026-05-25
-#!version=1.3
+#!version=1.4
 
 [MITM]
 hostname = api.mycake.me, api.cakeapp.me
@@ -12,3 +12,4 @@ hostname = api.mycake.me, api.cakeapp.me
 [Script]
 http-response ^https?://api\.mycake\.me/(app/start|heart\b|tutorbot/ticket/policy|v2/main/subscription/channel/updated|subscription/timesale/auto) script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Cake/cake.js
 http-response ^https?://api\.cakeapp\.me/ script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Cake/cake.js
+
