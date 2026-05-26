@@ -1,4 +1,4 @@
-// InkerSpeak (引客英语 / 造句说) Premium Unlock v1.4
+// InkerSpeak (引客英语 / 造句说) Premium Unlock v1.5
 // API: yinke.jinguizi07.cn - 全部明文JSON ✅ 无签名验证
 
 const url = $request.url;
