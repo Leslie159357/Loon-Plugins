@@ -1,11 +1,33 @@
-// YouMind Premium Unlock - Loon Script v1.0
+// YouMind Premium Unlock - Loon Script v1.2
 // By Leslie159357
+// Fix: Now handles both camelCase AND snake_case response formats
+//       Also patches YOUMIND_USER embedded in SSR HTML pages
 // Hook: POST /api/v1/getCurrentUser
 //       POST /api/v1/subscription/findSubscription
 //       POST /api/v1/credit/getCreditAccount
+//       GET  /*  (HTML pages with embedded YOUMIND_USER)
 
 const url = $request.url;
 const method = $request.method;
+
+// Helper: check if response uses camelCase or snake_case
+function isCamelCase(obj) {
+  return obj && ('productTier' in obj || 'monthlyBalance' in obj || 'spaceId' in obj);
+}
+
+// Patch YOUMIND_USER in SSR HTML pages
+if (method === 'GET' && $response && $response.body) {
+  let body = $response.body;
+  if (body.includes('YOUMIND_USER') && body.includes('"status":"trialing"')) {
+    body = body.replace(/"status":"trialing"/g, '"status":"active"');
+    body = body.replace(/"trial_expires_at":"[^"]+"/g, '"trial_expires_at":"2099-12-31T23:59:59.000Z"');
+    body = body.replace(/"trialExpiresAt":"[^"]+"/g, '"trialExpiresAt":"2099-12-31T23:59:59.000Z"');
+    $done({ body });
+    return;
+  }
+  $done({});
+  return;
+}
 
 if (method !== 'POST') {
   $done({});
@@ -13,12 +35,19 @@ if (method !== 'POST') {
 }
 
 if (url.includes('/api/v1/getCurrentUser')) {
-  // Modify user space status from trialing to active
   try {
     let bodyObj = JSON.parse($response.body);
-    if (bodyObj && bodyObj.space) {
-      bodyObj.space.status = 'active';
-      bodyObj.space.trial_expires_at = '2099-12-31T23:59:59.000Z';
+    if (bodyObj) {
+      const camel = isCamelCase(bodyObj);
+      if (bodyObj.space) {
+        if (camel) {
+          bodyObj.space.status = 'active';
+          bodyObj.space.trialExpiresAt = '2099-12-31T23:59:59.000Z';
+        } else {
+          bodyObj.space.status = 'active';
+          bodyObj.space.trial_expires_at = '2099-12-31T23:59:59.000Z';
+        }
+      }
     }
     $done({ body: JSON.stringify(bodyObj) });
   } catch (e) {
@@ -26,7 +55,6 @@ if (url.includes('/api/v1/getCurrentUser')) {
   }
 
 } else if (url.includes('/api/v1/subscription/findSubscription')) {
-  // Response is empty (204/content-length:0) → return a pro subscription
   const now = new Date().toISOString();
   const fakeSubscription = {
     "id": "sub_" + Date.now(),
@@ -49,24 +77,44 @@ if (url.includes('/api/v1/getCurrentUser')) {
   $done({ body: JSON.stringify(fakeSubscription) });
 
 } else if (url.includes('/api/v1/credit/getCreditAccount')) {
-  // Upgrade to pro tier with max credits
   try {
     let bodyObj = JSON.parse($response.body);
     if (bodyObj) {
-      bodyObj.product_tier = 'pro';
-      bodyObj.sub_tier = 3;
-      bodyObj.monthly_balance = 999999;
-      bodyObj.monthly_quota = 999999;
-      bodyObj.permanent_balance = 999999;
-      bodyObj.daily_balance = 99999;
-      bodyObj.daily_limit = 99999;
-      bodyObj.bonus_balance = 99999;
-      bodyObj.spendable_balance = 999999;
-      bodyObj.daily_used = 0;
-      bodyObj.has_ever_had_subscription = true;
-      bodyObj.free_monthly_daily_grant_count = 30;
-      bodyObj.free_monthly_daily_grant_max = 30;
-      bodyObj.current_period_end = '2099-12-31T23:59:59.000Z';
+      const camel = isCamelCase(bodyObj);
+      
+      if (camel) {
+        // camelCase format (x-use-camel-case: true)
+        bodyObj.productTier = 'pro';
+        bodyObj.subTier = 3;
+        bodyObj.monthlyBalance = 999999;
+        bodyObj.monthlyQuota = 999999;
+        bodyObj.permanentBalance = 999999;
+        bodyObj.dailyBalance = 99999;
+        bodyObj.dailyLimit = 99999;
+        bodyObj.bonusBalance = 99999;
+        bodyObj.spendableBalance = 999999;
+        bodyObj.dailyUsed = 0;
+        bodyObj.hasEverHadSubscription = true;
+        bodyObj.freeMonthlyDailyGrantCount = 30;
+        bodyObj.freeMonthlyDailyGrantMax = 30;
+        bodyObj.currentPeriodEnd = '2099-12-31T23:59:59.000Z';
+      } else {
+        // snake_case format (x-use-snake-case: true)
+        bodyObj.product_tier = 'pro';
+        bodyObj.sub_tier = 3;
+        bodyObj.monthly_balance = 999999;
+        bodyObj.monthly_quota = 999999;
+        bodyObj.permanent_balance = 999999;
+        bodyObj.daily_balance = 99999;
+        bodyObj.daily_limit = 99999;
+        bodyObj.bonus_balance = 99999;
+        bodyObj.spendable_balance = 999999;
+        bodyObj.daily_used = 0;
+        bodyObj.has_ever_had_subscription = true;
+        bodyObj.free_monthly_daily_grant_count = 30;
+        bodyObj.free_monthly_daily_grant_max = 30;
+        bodyObj.current_period_end = '2099-12-31T23:59:59.000Z';
+      }
     }
     $done({ body: JSON.stringify(bodyObj) });
   } catch (e) {
