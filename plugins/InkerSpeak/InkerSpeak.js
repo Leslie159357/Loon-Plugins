@@ -1,4 +1,4 @@
-// InkerSpeak Premium Unlock v1.6
+// InkerSpeak Premium Unlock v2.0
 // API: yinke.jinguizi07.cn - 全部明文JSON ✅ 无签名验证
 
 const url = $request.url;
@@ -52,18 +52,17 @@ if (url.includes('/api/story-series/')) {
       if (Array.isArray(obj.data[k]) && unlockVIP(obj.data[k])) modified = true;
     }
   }
-  if (modified) console.log('story-series: VIP已解锁');
 }
 
 if (url.includes('/api/distribution/summary')) {
   if (obj.data && typeof obj.data === 'object') {
-    obj.data.flowCoins = 99999; modified = true; console.log('flowCoins->99999');
+    obj.data.flowCoins = 99999; modified = true;
   }
 }
 
 if (url.includes('/api/distribution/exchange/membership')) {
   obj.code = 200; obj.success = true; obj.data = { flowCoins: 99999 }; obj.message = '操作成功';
-  modified = true; console.log('exchange/membership->伪造');
+  modified = true;
 }
 
 $done({ body: JSON.stringify(obj) });
