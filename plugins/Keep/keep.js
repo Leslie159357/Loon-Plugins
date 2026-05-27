@@ -1,9 +1,11 @@
 /**
- * Keep Premium Unlock v1.0
- * App: Keep (com.gotokeep.keep)
+ * Keep Premium Unlock v1.1
+ * App: Keep (com.gotokeep.keep) v9.0.20
  * 
  * Intercepts kprime auth/info endpoints to unlock premium membership.
  * All endpoints return plaintext JSON ✅
+ * 
+ * v1.1: Added /kprime/v2/home/complete/tab/exp intercept, refined field coverage
  */
 
 const PREMIUM_EXPIRE = 4070908800000; // 2099-01-01
@@ -55,19 +57,19 @@ try {
                     m.currentEffectiveDays = 99999;
                 });
             }
-            // Fix status JSON — replace "expired" with "active" for NORMAL
+            // Fix status JSON string — replace "expired" with "active" for NORMAL
             if (typeof obj.data.status === "string") {
                 try {
                     let statusObj = JSON.parse(obj.data.status);
                     for (let k in statusObj) {
-                        if (statusObj[k] === "expired" || statusObj[k] === "none") {
-                            statusObj[k] = k === "NORMAL" ? "active" : statusObj[k];
+                        if (statusObj[k] === "expired") {
+                            statusObj[k] = "active";
                         }
                     }
                     obj.data.status = JSON.stringify(statusObj);
                 } catch (e) {}
             }
-            // Fix paidStatus JSON
+            // Fix paidStatus JSON string
             if (typeof obj.data.paidStatus === "string") {
                 try {
                     let paidObj = JSON.parse(obj.data.paidStatus);
@@ -84,13 +86,13 @@ try {
         return;
     }
 
-    // 3. /kprime/v2/home/complete/tab — Premium home tab (not /exp)
-    if (/\/kprime\/v2\/home\/complete\/tab\b/.test(url) && !/\/tab\/exp/.test(url)) {
+    // 3. /kprime/v2/home/complete/tab — Premium home tab page (not /exp)
+    if (/\/kprime\/v2\/home\/complete\/tab\b/.test(url) && !/\/tab\/exp/.test(url) && !/\/tab\?/.test(url)) {
         if (obj.data) {
             // Fix memberInfo
             if (obj.data.memberInfo) {
                 obj.data.memberInfo.status = 1;
-                obj.data.memberInfo.gmtExpire = "2099-01-01T00:00:00.000Z";
+                obj.data.memberInfo.gmtExpire = PREMIUM_EXPIRE;
                 obj.data.memberInfo.autoRenew = true;
             }
             obj.data.headCopy = "尊贵的 Keep 会员";
@@ -99,21 +101,28 @@ try {
         return;
     }
 
-    // 4. /kprime/v1/plan/primeGlobalTips — show prime tips
+    // 4. /kprime/v2/home/complete/tab/exp — Premium tab exp endpoint
+    if (/\/kprime\/v2\/home\/complete\/tab\/exp/.test(url)) {
+        // This endpoint returns tabSales/showOtherTabExp flags — pass through
+        $done({ body });
+        return;
+    }
+
+    // 5. /kprime/v1/plan/primeGlobalTips — show prime tips
     if (/\/kprime\/v1\/plan\/primeGlobalTips/.test(url)) {
         // Already returns null data when expired, no change needed
         $done({ body });
         return;
     }
 
-    // 5. /kprime/v1/suit/tab/bubble — tab bubble
+    // 6. /kprime/v1/suit/tab/bubble — tab bubble
     if (/\/kprime\/v1\/suit\/tab\/bubble/.test(url)) {
         // No change needed for now
         $done({ body });
         return;
     }
 
-    // 6. /agamotto-webapp/v1/coach/role/user — AI coach
+    // 7. /agamotto-webapp/v1/coach/role/user — AI coach
     if (/\/agamotto-webapp\/v1\/coach\/role\/user/.test(url)) {
         if (obj.data) {
             obj.data.memberExclusive = true;
