@@ -1,6 +1,6 @@
 // 捏词 (nieci) Premium Unlock - Loon Script
 // 拦截API: www.kwhat.fun
-// 功能: 解锁会员 + 罐头积分
+// 功能: 解锁会员 + 罐头积分 + 消息不扣分
 
 var url = $request.url;
 var method = $request.method;
@@ -73,6 +73,16 @@ if (isResponse) {
           }
         }
         obj.data.uncheckedNum = 0;
+      }
+      body = JSON.stringify(obj);
+    }
+    
+    // POST /nieci/chat/saveHistory - 发消息不扣罐头
+    else if (url.indexOf('/nieci/chat/saveHistory') !== -1 && method === 'POST') {
+      var obj = JSON.parse(body);
+      if (obj.code === 200 && obj.data) {
+        obj.data.scoreBalance = 999999;
+        console.log('nieci: 保存消息带高分');
       }
       body = JSON.stringify(obj);
     }
