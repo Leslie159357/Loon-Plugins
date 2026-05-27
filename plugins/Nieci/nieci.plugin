@@ -1,15 +1,23 @@
 #!name=捏词 Premium Unlock
 #!desc=解锁捏词会员 + 罐头999999 + VIP模型
-#!system=ios
-#!home=https://github.com/Leslie159357/Loon-Plugins
 #!author=桐原时生
+#!home=https://github.com/Leslie159357/Loon-Plugins
+
+[Script]
+# getUserInfo -> 会员解锁
+http-response ^https?://www\.kwhat\.fun/nieci/user/getUserInfo script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Nieci/nieci.js, requires-body=true, tag=Nieci_VIP
+
+# score/balance -> 罐头积分
+http-response ^https?://www\.kwhat\.fun/nieci/score/balance script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Nieci/nieci.js, requires-body=true, tag=Nieci_Score
+
+# getBindIdol -> 绑定数量解锁
+http-response ^https?://www\.kwhat\.fun/nieci/user/getBindIdol script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Nieci/nieci.js, requires-body=true, tag=Nieci_Bind
+
+# getProductDetail-apple -> 商品价格改为0
+http-response ^https?://www\.kwhat\.fun/nieci/order/getProductDetail-apple script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Nieci/nieci.js, requires-body=true, tag=Nieci_Product
+
+# getNotice -> 标记公告已读
+http-response ^https?://www\.kwhat\.fun/nieci/user/getNotice script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Nieci/nieci.js, requires-body=true, tag=Nieci_Notice
 
 [MITM]
 hostname = %APPEND% www.kwhat.fun
-
-[Script]
-nieci_unlock = type=http-response, pattern=^https?://www\.kwhat\.fun/nieci/user/getUserInfo, requires-body=1, script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Nieci/nieci.js
-nieci_balance = type=http-response, pattern=^https?://www\.kwhat\.fun/nieci/score/balance, requires-body=1, script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Nieci/nieci.js
-nieci_bind = type=http-response, pattern=^https?://www\.kwhat\.fun/nieci/user/getBindIdol, requires-body=1, script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Nieci/nieci.js
-nieci_product = type=http-response, pattern=^https?://www\.kwhat\.fun/nieci/order/getProductDetail-apple, requires-body=1, script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Nieci/nieci.js
-nieci_notice = type=http-response, pattern=^https?://www\.kwhat\.fun/nieci/user/getNotice, requires-body=1, script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Nieci/nieci.js
