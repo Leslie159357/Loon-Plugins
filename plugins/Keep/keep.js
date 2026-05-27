@@ -1,202 +1,160 @@
 /*
- * Keep Premium Unlock v1.2
- * 功能：解锁Keep会员付费课程、跟练、训练计划、直播课
- * App版本：9.0.20
- *
- * 核心原则：只拦截真正影响会员状态的接口
- * - kprime/* — 会员身份、鉴权、页面（核心）
- * - guide-webapp/* — 弹窗、激励页面
- * - nuocha/* — 训练设置
- * - 不拦截 athena/...（AES加密不能改）和 pencil/...（运动功能，无关会员）
- *
- * [rewrite_local]
- * # Keep Premium Unlock
- * ^https?:\/\/api\.gotokeep\.com\/(kprime|nuocha|guide-webapp) url script-response-body https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Keep/keep.js
- *
- * [mitm]
- * hostname = api.gotokeep.com
+ * Keep Premium Unlock v2.0
+ * 暴力全覆盖版 — 所有api.gotokeep.com的JSON响应都过一遍替换
+ * 不改JSON结构，只替换会员相关字段值
  */
 
-// ================== 完全伪造的响应 ==================
-// 对核心会员接口，返回完整的伪造JSON
-const fakeResponses = {
-
-  // 1. 会员信息核心 - 所有会员状态聚合
+// ================== 完整伪造的会员核心接口 ==================
+const fakeFull = {
   "/kprime/v2/infoForClient": {
-    ok: true, errorCode: 0, text: null, moreInfo: null,
+    ok:true, errorCode:0, text:null, moreInfo:null,
     data: {
-      memberDTOList: [{
-        memberType: "YEAR_CARD", membershipType: "YEAR_CARD",
-        autoRenew: true, status: 1, statusTrack: "in_effect",
-        paidStatus: 1, paidStatusTrack: "paid",
-        gmtCurrentTypeExpire: 4102444799000, gmtExpire: 4102444799000,
-        totalEffectiveDays: 9999, stockFlag: false
-      }],
-      status: JSON.stringify({
-        WEIGHT_LOSS_COACH: "none", POSTURE_TIMES: "none",
-        PHYSICAL_TEST_LOW_PRICE_COURSE: "none", PHYSICAL_TEST: "non_pt_other",
-        LIVE: "none", LANSEXIONGDI_PARTNER: "none", E_PAI_PARTNER: "none",
-        POSTURE: "none", SHUYOU_PARTNER: "none", LIVE_FAMILY: "none",
-        NORMAL_FAMILY: "none", ZHONG_HE_PARTNER: "none",
-        NORMAL: "in_effect", KEEPLAND: "none"
-      }),
-      paidStatus: JSON.stringify({
-        WEIGHT_LOSS_COACH: "none", POSTURE_TIMES: "none",
-        PHYSICAL_TEST_LOW_PRICE_COURSE: "none", PHYSICAL_TEST: "none",
-        LIVE: "none", LANSEXIONGDI_PARTNER: "none", E_PAI_PARTNER: "none",
-        POSTURE: "none", SHUYOU_PARTNER: "none", LIVE_FAMILY: "none",
-        NORMAL_FAMILY: "none", ZHONG_HE_PARTNER: "none",
-        NORMAL: "paid", KEEPLAND: "none"
-      }),
-      primeStatus: "in_effect",
-      memberInfo: { status: 1, gmtExpire: 4102444799000, autoRenew: true }
+      memberDTOList:[{memberType:"YEAR_CARD",membershipType:"YEAR_CARD",autoRenew:true,status:1,statusTrack:"in_effect",paidStatus:1,paidStatusTrack:"paid",gmtCurrentTypeExpire:4102444799000,gmtExpire:4102444799000,totalEffectiveDays:9999,stockFlag:false}],
+      status:'{"WEIGHT_LOSS_COACH":"none","POSTURE_TIMES":"none","PHYSICAL_TEST_LOW_PRICE_COURSE":"none","PHYSICAL_TEST":"non_pt_other","LIVE":"none","LANSEXIONGDI_PARTNER":"none","E_PAI_PARTNER":"none","POSTURE":"none","SHUYOU_PARTNER":"none","LIVE_FAMILY":"none","NORMAL_FAMILY":"none","ZHONG_HE_PARTNER":"none","NORMAL":"in_effect","KEEPLAND":"none"}',
+      paidStatus:'{"WEIGHT_LOSS_COACH":"none","POSTURE_TIMES":"none","PHYSICAL_TEST_LOW_PRICE_COURSE":"none","PHYSICAL_TEST":"none","LIVE":"none","LANSEXIONGDI_PARTNER":"none","E_PAI_PARTNER":"none","POSTURE":"none","SHUYOU_PARTNER":"none","LIVE_FAMILY":"none","NORMAL_FAMILY":"none","ZHONG_HE_PARTNER":"none","NORMAL":"paid","KEEPLAND":"none"}',
+      primeStatus:"in_effect",
+      memberInfo:{status:1,gmtExpire:4102444799000,autoRenew:true}
     }
   },
-
-  // 2. 会员鉴权
   "/kprime/v1/auth": {
-    ok: true, errorCode: 0, text: null, moreInfo: null,
-    data: {
-      memberType: "YEAR_CARD", membershipType: "YEAR_CARD",
-      autoRenew: true, status: 1, statusTrack: "in_effect",
-      paidStatus: 1, paidStatusTrack: "paid",
-      gmtCurrentTypeExpire: 4102444799000, gmtExpire: 4102444799000,
-      totalEffectiveDays: 9999, stockFlag: false
-    }
+    ok:true, errorCode:0, text:null, moreInfo:null,
+    data:{memberType:"YEAR_CARD",membershipType:"YEAR_CARD",autoRenew:true,status:1,statusTrack:"in_effect",paidStatus:1,paidStatusTrack:"paid",gmtCurrentTypeExpire:4102444799000,gmtExpire:4102444799000,totalEffectiveDays:9999,stockFlag:false}
   },
-
-  // 3. 会员页面 (旧路径)
-  "/kprime/v2/home/complete/tab": {
-    ok: true, errorCode: 0, text: null, moreInfo: null,
-    data: {
-      tab: "normal",
-      memberInfo: { status: 1, gmtExpire: 4102444799000, autoRenew: true },
-      headCopy: "尊贵的会员，欢迎回来",
-      checkTheAgreement: true, moduleItems: []
-    }
-  },
-
-  // 4. 会员页面tab实验 (先返回好数据，后续页面还会调它)
   "/kprime/v2/home/complete/tab/exp": {
-    ok: true, errorCode: 0, text: null, moreInfo: null,
-    data: {
-      tabSales: true, showOtherTabExp: true,
-      memberInfo: { status: 1, gmtExpire: 4102444799000, autoRenew: true }
-    }
+    ok:true, errorCode:0, text:null, moreInfo:null,
+    data:{tabSales:true,showOtherTabExp:true,memberInfo:{status:1,gmtExpire:4102444799000,autoRenew:true}}
   },
-
-  // 5. 训练设置 - 改为付费用户
   "/nuocha/training/settings/summary": {
-    ok: true, errorCode: 0, text: "",
-    data: { settingsSummaryViewList: [], hasPaid: true }
+    ok:true, errorCode:0, text:"",
+    data:{settingsSummaryViewList:[],hasPaid:true}
   },
-
-  // 6. 课程开始权限验证
   "/nuocha/plans/": {
-    ok: true, errorCode: 0, text: "",
-    data: { status: true, text: "", schema: "" }
+    ok:true, errorCode:0, text:"",
+    data:{status:true,text:"",schema:""}
   },
-
-  // 7. 训练计划会员权益
-  "/kprime/v1/member/privilege": {
-    errorCode: 0, text: "", data: true
-  },
-
-  // 8. 弹窗 - 空数据（去购买弹窗）
-  "/guide-webapp/v1/popup/getPopUp": {
-    errorCode: 0, text: "", data: null
-  },
-
-  // 9. 激励页面
-  "/guide-webapp/v3/motivate/page": {
-    ok: true, errorCode: 0, text: "", data: null
-  },
-
-  // 10. combo/goal
-  "/guide-webapp/v1/combogoal/info": {
-    errorCode: 0, text: "", data: null
-  }
+  "/guide-webapp/v1/popup/getPopUp": {errorCode:0,text:"",data:null},
+  "/guide-webapp/v3/motivate/page": {ok:true,errorCode:0,text:"",data:null},
+  "/guide-webapp/v1/combogoal/info": {errorCode:0,text:"",data:null},
+  "/kprime/v1/member/privilege": {errorCode:0,text:"",data:true},
+  "/suit/v5/inJoin": {ok:true,data:true,errorCode:0,text:""},
+  "/suit/v5/replace/window": {ok:true,data:true,errorCode:0,text:""}
 };
 
-// ================== 精确正则替换 ==================
-// 对其他kprime/guide/nuocha接口进行精确的关键字替换
-const regexRules = [
+// ================== 把整个响应文本中的会员字段全换了 ==================
+function unlockBody(body) {
+  return body
+    // 会员身份
+    .replace(/"memberType":"NORMAL"/g, '"memberType":"YEAR_CARD"')
+    .replace(/"memberType":"TRIAL"/g, '"memberType":"YEAR_CARD"')
+    .replace(/"memberType":"FREE"/g, '"memberType":"YEAR_CARD"')
+    // 状态码
+    .replace(/"status":3/g, '"status":1')
+    .replace(/"status":2/g, '"status":1')
+    // 状态文本
+    .replace(/"statusTrack":"expired"/g, '"statusTrack":"in_effect"')
+    .replace(/"primeStatus":"expired"/g, '"primeStatus":"in_effect"')
+    .replace(/"primeStatus":"none"/g, '"primeStatus":"in_effect"')
+    .replace(/"membership_status":"expired"/g, '"membership_status":"active"')
+    .replace(/"memberStatus":\d+/g, '"memberStatus":1')
+    // 自动续费
+    .replace(/"autoRenew":false/g, '"autoRenew":true')
+    .replace(/"autoRenew":null/g, '"autoRenew":true')
+    // 付费标记
+    .replace(/"hasPaid":false/g, '"hasPaid":true')
+    .replace(/"free":false/g, '"free":true')
+    .replace(/"limitFree":false/g, '"limitFree":true')
+    .replace(/"isVip":false/g, '"isVip":true')
+    .replace(/"member":false/g, '"member":true')
+    .replace(/"downLoadAll":false/g, '"downLoadAll":true')
+    .replace(/"startEnable":false/g, '"startEnable":true')
+    // 权限开关
+    .replace(/"userLiveMemberStatus":false/g, '"userLiveMemberStatus":true')
+    .replace(/"canWatchLive":false/g, '"canWatchLive":true')
+    .replace(/"userMemberAutoRenew":false/g, '"userMemberAutoRenew":true')
+    .replace(/"userUseLiveMemberRights":false/g, '"userUseLiveMemberRights":true')
+    .replace(/"restrictedNow":true/g, '"restrictedNow":false')
+    .replace(/"membershipOnly":true/g, '"membershipOnly":false')
+    .replace(/"preview":true/g, '"preview":false')
+    // 限制归零
+    .replace(/"limitCount":[1-9]\d*/g, '"limitCount":0')
+    .replace(/"videoTime":[1-9]\d*/g, '"videoTime":0')
+    // 到期时间
+    .replace(/"gmtExpire":null/g, '"gmtExpire":4102444799000')
+    .replace(/"gmtExpire":1[0-9]{12}/g, '"gmtExpire":4102444799000')
+    .replace(/"gmtCurrentTypeExpire":1[0-9]{12}/g, '"gmtCurrentTypeExpire":4102444799000')
+    .replace(/"gmtPaidTypeExpire":1[0-9]{12}/g, '"gmtPaidTypeExpire":4102444799000')
+    .replace(/"userLiveMemberExpireTime":\d{1,12}/g, '"userLiveMemberExpireTime":4102444799000')
+    // 文案
+    .replace(/"headCopy":"[^"]*"/g, '"headCopy":"尊贵的会员，欢迎回来"')
+    .replace(/"buttonText":"[^"]*"/g, '"buttonText":""')
+    .replace(/"userName":"[^"]*"/g, '"userName":"VIP"')
+    .replace(/"limitFreeType":"[^"]*"/g, '"limitFreeType":""')
+    // 错误码
+    .replace(/"errorCode":[1-9]\d*/g, '"errorCode":0')
+    // data/status假→真（会员权益验证）
+    .replace(/"data":false/g, '"data":true')
+    .replace(/"status":false/g, '"status":true');
+}
 
-  // 会员身份：NORMAL/TRIAL/FREE → YEAR_CARD
-  { pattern: /"memberType":"(\w)*"/g, replacement: '"memberType":"YEAR_CARD"' },
-
-  // 会员状态：3(expired)/2 → 1(active)
-  { pattern: /"status":3/g, replacement: '"status":1' },
-
-  // 会员状态文本
-  { pattern: /"statusTrack":"expired"/g, replacement: '"statusTrack":"in_effect"' },
-  { pattern: /"primeStatus":"expired"/g, replacement: '"primeStatus":"in_effect"' },
-
-  // 自动续费
-  { pattern: /"autoRenew":false/g, replacement: '"autoRenew":true' },
-  { pattern: /"autoRenew":null/g, replacement: '"autoRenew":true' },
-
-  // 付费标记
-  { pattern: /"hasPaid":false/g, replacement: '"hasPaid":true' },
-  { pattern: /"free":false/g, replacement: '"free":true' },
-  { pattern: /"limitFree":false/g, replacement: '"limitFree":true' },
-  { pattern: /"isVip":false/g, replacement: '"isVip":true' },
-  { pattern: /"member":false/g, replacement: '"member":true' },
-
-  // 直播课权限
-  { pattern: /"userLiveMemberStatus":false/g, replacement: '"userLiveMemberStatus":true' },
-  { pattern: /"canWatchLive":false/g, replacement: '"canWatchLive":true' },
-
-  // 限制归零
-  { pattern: /"limitCount":\d{1,3}/g, replacement: '"limitCount":0' },
-  { pattern: /"videoTime":\d{2,}/g, replacement: '"videoTime":0' },
-
-  // 功能解锁
-  { pattern: /"downLoadAll":false/g, replacement: '"downLoadAll":true' },
-  { pattern: /"preview":true/g, replacement: '"preview":false' },
-  { pattern: /"startEnable":false/g, replacement: '"startEnable":true' },
-  { pattern: /"restrictedNow":true/g, replacement: '"restrictedNow":false' },
-  { pattern: /"membershipOnly":true/g, replacement: '"membershipOnly":false' },
-
-  // 到期时间null → 2099年
-  { pattern: /"gmtExpire":null/g, replacement: '"gmtExpire":4102444799000' },
-  
-  // headCopy替换
-  { pattern: /"headCopy":"[^"]*"/g, replacement: '"headCopy":"尊贵的会员，欢迎回来"' },
-
-  // 购买按钮文案置空
-  { pattern: /"buttonText":"[^"]*"/g, replacement: '"buttonText":""' },
-
-  // 错误码归零
-  { pattern: /"errorCode":[1-9]\d*/g, replacement: '"errorCode":0' },
-
-  // 会员权益 data:false → true
-  { pattern: /"data":false/g, replacement: '"data":true' },
-
-  // 会员权益 status:false → true
-  { pattern: /"status":false/g, replacement: '"status":true' },
-];
-
-// ================== 主逻辑 ==================
 let url = $request.url;
 let body = $response.body;
 
-// 1. 先检查是否匹配到完全伪造的接口
-for (let key in fakeResponses) {
-  if (url.indexOf(key) !== -1) {
-    $done({ body: JSON.stringify(fakeResponses[key]) });
-    return;
-  }
+// 1. 完全伪造的核心接口
+if (url.indexOf("/kprime/v2/infoForClient") !== -1) {
+  $done({ body: JSON.stringify(fakeFull["/kprime/v2/infoForClient"]) });
+  return;
+}
+if (url.indexOf("/kprime/v1/auth") !== -1) {
+  $done({ body: JSON.stringify(fakeFull["/kprime/v1/auth"]) });
+  return;
+}
+if (url.indexOf("/kprime/v2/home/complete/tab/exp") !== -1) {
+  $done({ body: JSON.stringify(fakeFull["/kprime/v2/home/complete/tab/exp"]) });
+  return;
+}
+if (url.indexOf("/nuocha/training/settings/summary") !== -1) {
+  $done({ body: JSON.stringify(fakeFull["/nuocha/training/settings/summary"]) });
+  return;
+}
+if (url.indexOf("/nuocha/plans/") !== -1) {
+  $done({ body: JSON.stringify(fakeFull["/nuocha/plans/"]) });
+  return;
+}
+if (url.indexOf("/guide-webapp/v1/popup") !== -1) {
+  $done({ body: JSON.stringify(fakeFull["/guide-webapp/v1/popup/getPopUp"]) });
+  return;
+}
+if (url.indexOf("/guide-webapp/v3/motivate/page") !== -1) {
+  $done({ body: JSON.stringify(fakeFull["/guide-webapp/v3/motivate/page"]) });
+  return;
+}
+if (url.indexOf("/guide-webapp/v1/combogoal") !== -1) {
+  $done({ body: JSON.stringify(fakeFull["/guide-webapp/v1/combogoal/info"]) });
+  return;
+}
+if (url.indexOf("/kprime/v1/member/privilege") !== -1) {
+  $done({ body: JSON.stringify(fakeFull["/kprime/v1/member/privilege"]) });
+  return;
+}
+if (url.indexOf("/suit/v5/inJoin") !== -1) {
+  $done({ body: JSON.stringify(fakeFull["/suit/v5/inJoin"]) });
+  return;
+}
+if (url.indexOf("/suit/v5/replace/window") !== -1) {
+  $done({ body: JSON.stringify(fakeFull["/suit/v5/replace/window"]) });
+  return;
 }
 
-// 2. 正则替换（仅对kprime/nuocha/guide接口）
-if (/api\.gotokeep\.com\/(kprime|nuocha|guide)/.test(url)) {
+// 2. 对 /kprime/v2/home/complete/tab 保留moduleItems（不做完整替换）
+//    只替换status等字段（用正则）
+// 3. 对 /kprime/v2/home/complete/native 同样保留原始结构
+
+// 4. 所有其他kprime/nuocha/guide/suit接口都走暴力替换
+if (body && url.indexOf("api.gotokeep.com") !== -1) {
   try {
-    for (let rule of regexRules) {
-      body = body.replace(rule.pattern, rule.replacement);
-    }
-  } catch (e) {
-    console.log("Keep unlock regex error: " + e);
+    body = unlockBody(body);
+  } catch(e) {
+    console.log("Keep unlock error: " + e);
   }
 }
 
