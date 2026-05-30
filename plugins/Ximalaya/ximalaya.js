@@ -1,5 +1,6 @@
-// 喜马拉雅 VIP解锁脚本 v1.0
+// 喜马拉雅 VIP解锁脚本 v1.1
 // 拦截关键API，解锁VIP会员/付费单集/无限试听
+// 支持 mobwsa.ximalaya.com + mobile.ximalaya.com 两个域名
 
 var url = $request.url;
 var body = $response.body;
@@ -22,8 +23,6 @@ try {
 
 // ===== 1. VIP会员状态 =====
 if (url.indexOf('/mobile-user/my/vip') !== -1) {
-    // vipStatus: 0→1 (正式会员)
-    // 伪造一个已激活的VIP状态
     if (obj.data && Array.isArray(obj.data)) {
         for (var i = 0; i < obj.data.length; i++) {
             if (obj.data[i]) {
@@ -46,18 +45,14 @@ if (url.indexOf('/mobile-playpage/playpage/tabs/v2/') !== -1) {
             pp.trackInfo.isFree = true;
             pp.trackInfo.isVipFree = true;
             pp.trackInfo.isAuthorized = true;
-            // 试听时长设为0（无限试听 = 不截断）
             pp.trackInfo.sampleDuration = 999999;
             pp.trackInfo.vipFreeType = 0;
             pp.trackInfo.vipFirstStatus = 1;
-            // 价格改为免费
             pp.trackInfo.price = 0;
             pp.trackInfo.discountedPrice = 0;
             pp.trackInfo.displayPrice = "免费";
             pp.trackInfo.displayDiscountedPrice = "免费";
-            // 防盗链标记关闭
             pp.trackInfo.isAntiLeech = false;
-            // 高清音质解锁
             if (pp.trackInfo.trackQualityList && Array.isArray(pp.trackInfo.trackQualityList)) {
                 for (var j = 0; j < pp.trackInfo.trackQualityList.length; j++) {
                     if (pp.trackInfo.trackQualityList[j]) {
@@ -67,7 +62,6 @@ if (url.indexOf('/mobile-playpage/playpage/tabs/v2/') !== -1) {
                     }
                 }
             }
-            // priceTypes
             if (pp.trackInfo.priceTypes && Array.isArray(pp.trackInfo.priceTypes)) {
                 for (var k = 0; k < pp.trackInfo.priceTypes.length; k++) {
                     if (pp.trackInfo.priceTypes[k]) {
@@ -109,7 +103,7 @@ if (url.indexOf('/mobile-playpage/playpage/tabs/v2/') !== -1) {
             pp.authorizeInfo.hasWiretapped = false;
         }
 
-        // --- vipResourceBtns (移除购买按钮) ---
+        // --- vipResourceBtns ---
         if (pp.vipResourceBtns && Array.isArray(pp.vipResourceBtns)) {
             pp.vipResourceBtns = [];
         }
@@ -120,7 +114,6 @@ if (url.indexOf('/mobile-playpage/playpage/tabs/v2/') !== -1) {
 
 // ===== 3. 播放页View =====
 if (url.indexOf('/mobile-playpage/view/') !== -1) {
-    // 这个接口目前没有isPaid字段，但保留以备用
     $done({body: body});
     return;
 }
@@ -130,16 +123,14 @@ if (url.indexOf('/product/promotion/v1/album/price/') !== -1) {
     if (obj.data && obj.data.behaviors && Array.isArray(obj.data.behaviors)) {
         for (var m = 0; m < obj.data.behaviors.length; m++) {
             if (obj.data.behaviors[m]) {
-                // 隐藏所有购买按钮
                 obj.data.behaviors[m].isHidden = true;
                 if (obj.data.behaviors[m].afterSampleButtonText) {
-                    obj.data.behaviors[m].afterSampleButtonText = "VIP会员 畅听中";
+                    obj.data.behaviors[m].afterSampleButtonText = "VIP会员畅听中";
                 }
                 obj.data.behaviors[m].labelText = "";
                 if (obj.data.behaviors[m].labelSubTitle) {
                     obj.data.behaviors[m].labelSubTitle = "";
                 }
-                // 移除购买行为
                 if (obj.data.behaviors[m].action && obj.data.behaviors[m].action.type === 'url') {
                     obj.data.behaviors[m].action.type = 'none';
                 }
@@ -163,7 +154,7 @@ if (url.indexOf('/nyx/history/query/detail') !== -1) {
                 model.isAuthorized = true;
                 model.paid = false;
                 model.vipFreeType = 0;
-                model.breakSecond = 999999; // 试听时长无限
+                model.breakSecond = 999999;
             }
         }
     }
@@ -173,7 +164,6 @@ if (url.indexOf('/nyx/history/query/detail') !== -1) {
 
 // ===== 6. 历史记录ID列表 =====
 if (url.indexOf('/nyx/history/query/id/list') !== -1) {
-    // 这个接口没有付费字段，透传
     $done({body: body});
     return;
 }
@@ -181,7 +171,6 @@ if (url.indexOf('/nyx/history/query/id/list') !== -1) {
 // ===== 7. 首页个人信息 =====
 if (url.indexOf('/mobile-user/v2/homePage/') !== -1) {
     if (obj.data) {
-        // VIP相关字段全部改为true
         obj.data.isVip = true;
         obj.data.vipStatus = 1;
         if (obj.data.vipInfo) {
@@ -205,6 +194,52 @@ if (url.indexOf('/mobile-user/v2/homePage/') !== -1) {
         }
     }
     $done({body: JSON.stringify(obj)});
+    return;
+}
+
+// ===== 8. 播放列表（专辑内所有集数） =====
+if (url.indexOf('/mobile/playlist/album/new') !== -1) {
+    if (obj.data && obj.data.list && Array.isArray(obj.data.list)) {
+        for (var p = 0; p < obj.data.list.length; p++) {
+            var item = obj.data.list[p];
+            if (item) {
+                item.isPaid = false;
+                item.isVipFree = true;
+                item.isAuthorized = true;
+                if (item.vipFreeType) item.vipFreeType = 0;
+                if (item.paidType) item.paidType = 0;
+            }
+        }
+    }
+    $done({body: JSON.stringify(obj)});
+    return;
+}
+
+// ===== 9. 推荐资源分配 =====
+if (url.indexOf('/mobile-playpage/playpage/recommend/resource/allocation/') !== -1) {
+    // 透传，不变
+    $done({body: body});
+    return;
+}
+
+// ===== 10. recommendContentV2 =====
+if (url.indexOf('/mobile-playpage/playpage/recommendContentV2') !== -1) {
+    // 透传
+    $done({body: body});
+    return;
+}
+
+// ===== 11. popup/info =====
+if (url.indexOf('/business-sale-promotion-guide-mobile-web/popup/info/v1') !== -1) {
+    // 透传
+    $done({body: body});
+    return;
+}
+
+// ===== 12. subscribe/status =====
+if (url.indexOf('/lamia/v1/subscribe/status') !== -1) {
+    // 透传
+    $done({body: body});
     return;
 }
 
