@@ -1,0 +1,36 @@
+#!name=Keep 会员解锁
+#!desc=通过 MITM 修改 kprime 接口响应，解锁 Keep 会员训练计划等付费功能 v1.0
+#!author=Leslie
+#!homepage=https://github.com/Leslie159357/Loon-Plugins
+#!icon=https://static1.keepcdn.com/avatar/2020/03/02/17/31/61f89af98edb028d5c79465fe6668671aed96a97.jpg
+#!version=1.0.0
+#!date=2026-06-02
+#!modify=2026-06-02
+
+[MITM]
+hostname = %APPEND% api.gotokeep.com
+
+[Script]
+# kprime/v1/auth — 会员认证核心
+http-response ^https?://api\.gotokeep\.com/kprime/v1/auth$ requires-body=1 max-size=8192 script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Keep-Prime/keep_vip.js, tag=Keep_Auth, timeout=10
+
+# kprime/v2/infoForClient — 会员状态汇总
+http-response ^https?://api\.gotokeep\.com/kprime/v2/infoForClient$ requires-body=1 max-size=8192 script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Keep-Prime/keep_vip.js, tag=Keep_InfoForClient, timeout=10
+
+# kprime/v2/home/complete/tab — 会员首页
+http-response ^https?://api\.gotokeep\.com/kprime/v2/home/complete/tab requires-body=1 max-size=65536 script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Keep-Prime/keep_vip.js, tag=Keep_HomeTab, timeout=10
+
+# kprime/v4/suit/sales/entrance — 付费弹窗/商品列表
+http-response ^https?://api\.gotokeep\.com/kprime/v4/suit/sales/entrance requires-body=1 max-size=65536 script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Keep-Prime/keep_vip.js, tag=Keep_SalesEntrance, timeout=10
+
+# kprime/v1/member/privilege — 特权校验（训练）
+http-response ^https?://api\.gotokeep\.com/kprime/v1/member/privilege requires-body=1 max-size=4096 script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Keep-Prime/keep_vip.js, tag=Keep_MemberPrivilege, timeout=10
+
+# arke-webapp/v2/suit/smart/customize/preview/* — 训练计划定制预览
+http-response ^https?://api\.gotokeep\.com/arke-webapp/v2/suit/smart/customize/preview/ requires-body=1 max-size=65536 script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Keep-Prime/keep_vip.js, tag=Keep_ArkePreview, timeout=10
+
+# suit/v1/recommend/structuration/all — 课程推荐去会员标记
+http-response ^https?://api\.gotokeep\.com/suit/v1/recommend/structuration/all requires-body=1 max-size=65536 script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Keep-Prime/keep_vip.js, tag=Keep_StructAll, timeout=10
+
+# twins/v6/feed/course — 课程推荐列表（vipStatus）
+http-response ^https?://api\.gotokeep\.com/twins/v6/feed/course requires-body=1 max-size=262144 script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Keep-Prime/keep_vip.js, tag=Keep_TwinsFeed, timeout=10
