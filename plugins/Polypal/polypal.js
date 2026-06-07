@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Polypal VIP Unlock
-// @version      1.1.0
-// @description  解锁Polypal（Timekettle Live Translator）VIP会员 - 无限时长 + Pro功能 + 高级翻译模型
+// @version      1.2.0
+// @description  解锁Polypal VIP + 价格改0元 + 免费下单
 // @author       Minis
 // @license      MIT
 // ==/UserScript==
@@ -17,7 +17,6 @@ if (url.indexOf('/livetranslator/app/benefit/user_plan/current') !== -1) {
     try {
       var obj = JSON.parse(body);
       if (obj && obj.code === 0 && obj.data) {
-        // 返回完整的Pro会员数据
         obj.data = {
           "benefit_type": 3,
           "benefit_name": "连续包年",
@@ -32,17 +31,16 @@ if (url.indexOf('/livetranslator/app/benefit/user_plan/current') !== -1) {
           "used_total_duration_minute": 999999,
           "used_effective_duration": 99,
           "used_effective_duration_unit": "year",
-          // 以下是Pro功能相关字段
-          "llm_access": true,           // LLM大模型访问权限
-          "custom_model": true,         // 自定义模型权限
-          "pro_features": true,         // Pro功能总开关
-          "max_llm_requests": -1,       // 无限LLM请求
-          "ai_summary": true,           // AI总结
-          "ai_mindmap": true,           // AI思维导图
-          "ai_tutor": true,             // AI外教
-          "deepseek_model": true,       // DeepSeek模型
-          "gpt_model": true,            // GPT模型
-          "unlimited_translate": true   // 无限翻译
+          "llm_access": true,
+          "custom_model": true,
+          "pro_features": true,
+          "max_llm_requests": -1,
+          "ai_summary": true,
+          "ai_mindmap": true,
+          "ai_tutor": true,
+          "deepseek_model": true,
+          "gpt_model": true,
+          "unlimited_translate": true
         };
       }
       $done({body: JSON.stringify(obj)});
@@ -57,7 +55,6 @@ if (url.indexOf('/livetranslator/app/benefit/user_plan/current') !== -1) {
 
 // ========== 2. 剩余时长 ==========
 // GET /livetranslator/app/user/duration/remain
-// 免费用户 remain 原始值为5（5分钟试用），改为999999
 if (url.indexOf('/livetranslator/app/user/duration/remain') !== -1) {
   if (body) {
     try {
@@ -77,7 +74,6 @@ if (url.indexOf('/livetranslator/app/user/duration/remain') !== -1) {
 
 // ========== 3. 图片翻译权益 ==========
 // GET /polypal-ai/app/image/benefit
-// 保 ok: true 并增加无限次数
 if (url.indexOf('/polypal-ai/app/image/benefit') !== -1) {
   if (body) {
     try {
@@ -98,9 +94,8 @@ if (url.indexOf('/polypal-ai/app/image/benefit') !== -1) {
   return;
 }
 
-// ========== 4. 存储空间（增强） ==========
+// ========== 4. 存储空间 ==========
 // GET /livetranslator/app/document/si/recording/storage
-// 免费用户 5GB → 改为无限
 if (url.indexOf('/livetranslator/app/document/si/recording/storage') !== -1) {
   if (body) {
     try {
@@ -120,9 +115,77 @@ if (url.indexOf('/livetranslator/app/document/si/recording/storage') !== -1) {
   return;
 }
 
-// ========== 5. 免费时长领取（拦截） ==========
-// POST /livetranslator/app/goods/duration/free
-// 每次返回5分钟，status=3。如果App在客户端判断次数，这个不需要修改
-// 但保留扩展
+// ========== 5. 商品列表 - 价格改0元 ==========
+// GET /livetranslator/app/shop_activity/page?entry_key=home/mine/hook_page
+// 将所有商品价格改为0
+if (url.indexOf('/livetranslator/app/shop_activity/page') !== -1) {
+  if (body) {
+    try {
+      var obj = JSON.parse(body);
+      if (obj && obj.code === 0 && obj.data && obj.data.plans) {
+        for (var i = 0; i < obj.data.plans.length; i++) {
+          obj.data.plans[i].price = 0;
+          obj.data.plans[i].currency = "USD";
+          // 试用相关参数
+          obj.data.plans[i].used_total_duration_minute = 999999;
+          obj.data.plans[i].used_effective_duration = 99;
+          obj.data.plans[i].used_effective_duration_unit = "year";
+          obj.data.plans[i].is_online = true;
+          obj.data.plans[i].trial_period_days = 999;
+        }
+      }
+      $done({body: JSON.stringify(obj)});
+    } catch (e) {
+      $done({});
+    }
+  } else {
+    $done({});
+  }
+  return;
+}
+
+// ========== 6. 商品目录 - 价格改0元 ==========
+// GET /livetranslator/app/shop_activity/product_catalog
+if (url.indexOf('/livetranslator/app/shop_activity/product_catalog') !== -1) {
+  if (body) {
+    try {
+      var obj = JSON.parse(body);
+      if (obj && obj.code === 0 && obj.data && obj.data.infos) {
+        for (var i = 0; i < obj.data.infos.length; i++) {
+          obj.data.infos[i].price = 0;
+          obj.data.infos[i].is_online = true;
+          obj.data.infos[i].is_continuous = false;
+        }
+      }
+      $done({body: JSON.stringify(obj)});
+    } catch (e) {
+      $done({});
+    }
+  } else {
+    $done({});
+  }
+  return;
+}
+
+// ========== 7. Apple内购下单 ==========
+// POST /livetranslator/app/settle/vip/apple/order
+// 响应中确保order_no存在，同时将价格设为0
+if (url.indexOf('/livetranslator/app/settle/vip/apple/order') !== -1) {
+  if (body) {
+    try {
+      var obj = JSON.parse(body);
+      if (obj && obj.code === 0 && obj.data) {
+        // order_no 已存在就不需要改，确保返回成功
+      }
+      $done({body: JSON.stringify(obj)});
+    } catch (e) {
+      // 如果响应体异常，返回成功
+      $done({body: JSON.stringify({"code":0,"message":"Success","data":{"order_no":"free_order","price":0,"currency":"USD","is_free":true}})});
+    }
+  } else {
+    $done({body: JSON.stringify({"code":0,"message":"Success","data":{"order_no":"free_order","price":0,"currency":"USD","is_free":true}})});
+  }
+  return;
+}
 
 $done({});
