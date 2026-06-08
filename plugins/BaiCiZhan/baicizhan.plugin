@@ -5,7 +5,12 @@
 #!homepage=https://github.com/Leslie159357/Loon-Plugins
 
 [Script]
-http-response ^https?:\/\/(learn|conan|system|try|du|passport)\.baicizhan\.com\/.* script-path = https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/BaiCiZhan/baicizhan_qx.js, requires-body = true, timeout = 10, tag = 百词斩VIP解锁
+http-response ^https:\/\/learn\.baicizhan\.com script-path = https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/BaiCiZhan/baicizhan_qx.js, requires-body = true, timeout = 10, tag = 百词斩学习
+http-response ^https:\/\/conan\.baicizhan\.com script-path = https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/BaiCiZhan/baicizhan_qx.js, requires-body = true, timeout = 10, tag = 百词斩业务
+http-response ^https:\/\/system\.baicizhan\.com script-path = https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/BaiCiZhan/baicizhan_qx.js, requires-body = true, timeout = 10, tag = 百词斩系统
+http-response ^https:\/\/try\.baicizhan\.com script-path = https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/BaiCiZhan/baicizhan_qx.js, requires-body = true, timeout = 10, tag = 百词斩辅助
+http-response ^https:\/\/passport\.baicizhan\.com script-path = https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/BaiCiZhan/baicizhan_qx.js, requires-body = true, timeout = 10, tag = 百词斩认证
+http-response ^https:\/\/du\.baicizhan\.com script-path = https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/BaiCiZhan/baicizhan_qx.js, requires-body = true, timeout = 10, tag = 百词斩旧API
 
 [Mitm]
 hostname = learn.baicizhan.com, conan.baicizhan.com, system.baicizhan.com, try.baicizhan.com, du.baicizhan.com, passport.baicizhan.com
