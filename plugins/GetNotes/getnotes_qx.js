@@ -1,8 +1,8 @@
 // ==CloakNote==
-// 得到大脑 GetNotes VIP 解锁 v2.2
+// 得到大脑 GetNotes VIP 解锁 v2.3
 // Quantumult X 脚本
-// 拦截: dmind.luojilab.com + notes-api.biji.com + get-notes.luojilab.com
-// 基于多次实际抓包逐步完善
+// 拦截: dmind.luojilab.com + notes-api.biji.com + get-notes.luojilab.com + ddbrain.*.com
+// 基于5轮抓包全面覆盖
 // ==/CloakNote==
 
 const url = $request.url;
@@ -17,9 +17,9 @@ try {
   let obj = JSON.parse(body);
 
   // ==========================================================
-  // 1. 用户信息 - VIP状态 + 权益配额
-  //    dmind.luojilab.com/voicenotes/mind/app/v1/user/info
-  //    get-notes.luojilab.com/voicenotes/web/user/info
+  // 1. VIP用户信息 - is_vip + 权益配额
+  //    dmind/voicenotes/mind/app/v1/user/info
+  //    get-notes/voicenotes/web/user/info
   // ==========================================================
   if (url.indexOf('/user/info') !== -1) {
     if (obj.c && obj.c.data && obj.c.data.vip_info) {
@@ -32,8 +32,8 @@ try {
       vip.surplus_days = 36500;
       vip.subscribed_days = 36500;
       vip.is_ever_subscribed = true;
-      vip.current_tier = 'pro';
-      vip.equity_intro = 'PRO会员';
+      vip.current_tier = 'max';  // 专家版
+      vip.equity_intro = '专家版会员';
     }
     if (obj.c && obj.c.data && obj.c.data.rights_info) {
       let r = obj.c.data.rights_info;
@@ -55,13 +55,50 @@ try {
         q.asr_hot_words_quota.granted_count = 999;
       }
     }
-    console.log('GetNotes: /user/info -> VIP unlocked + quotas maxed');
+    console.log('GetNotes: /user/info -> VIP max unlocked');
   }
 
   // ==========================================================
-  // 2. VIP卡信息 - 两个域名
-  //    dmind.luojilab.com/shop/mind/app/v1/vipcards/user
-  //    notes-api.biji.com/shop/app/v1/vipcards/user
+  // 2. ddbrain域名 VIP核心
+  //    GET /ddbrain/vip/info
+  // ==========================================================
+  if (url.indexOf('/ddbrain/vip/info') !== -1) {
+    if (obj.c && obj.c.memberships && Array.isArray(obj.c.memberships)) {
+      obj.c.memberships.forEach(function(m) {
+        m.is_active = true;
+        m.expired = false;
+        m.expire_time = 4092599349;
+        m.remain_days = 36500;
+      });
+    }
+    console.log('GetNotes: /ddbrain/vip/info -> all memberships active');
+  }
+
+  // ==========================================================
+  // 3. ddbrain 记忆/人格/学习
+  //    /ddbrain/yoda/app/v1/xiaobu/memory-stats
+  //    /ddbrain/yoda/app/v1/xiaobu/persona-triggered
+  //    /ddbrain/study/list
+  // ==========================================================
+  if (url.indexOf('/ddbrain/yoda/app/v1/xiaobu/memory-stats') !== -1) {
+    if (obj.c) {
+      obj.c.total = 99999;
+      obj.c.note = 99999;
+    }
+    console.log('GetNotes: /memory-stats -> maxed');
+  }
+
+  if (url.indexOf('/ddbrain/yoda/app/v1/xiaobu/persona-triggered') !== -1) {
+    if (obj.c) {
+      obj.c.triggered = true;
+    }
+    console.log('GetNotes: /persona-triggered -> triggered');
+  }
+
+  // ==========================================================
+  // 4. VIP卡信息 - 两个域名
+  //    dmind/shop/mind/app/v1/vipcards/user
+  //    notes-api/shop/app/v1/vipcards/user
   // ==========================================================
   if (url.indexOf('/vipcards/user') !== -1) {
     if (obj.c && obj.c.vip_info) {
@@ -74,20 +111,20 @@ try {
       vip.surplus_days = 36500;
       vip.subscribed_days = 36500;
       vip.is_ever_subscribed = true;
-      vip.current_tier = 'pro';
+      vip.current_tier = 'max';  // 专家版
     }
     if (obj.c && obj.c.user) {
       obj.c.user.vip_status = 'paid';
       obj.c.user.is_paid_user = true;
       obj.c.user.user_group = 'vip';
     }
-    console.log('GetNotes: /vipcards/user -> VIP unlocked');
+    console.log('GetNotes: /vipcards/user -> VIP max unlocked');
   }
 
   // ==========================================================
-  // 3. VIP卡列表 + Max卡 - 已购标记
-  //    notes-api.biji.com/shop/app/v1/vipcards
-  //    notes-api.biji.com/shop/app/v1/maxcards
+  // 5. 商品列表 - 已购标记
+  //    notes-api/shop/app/v1/vipcards
+  //    notes-api/shop/app/v1/maxcards
   // ==========================================================
   if ((url.indexOf('/shop/app/v1/vipcards') !== -1 && url.indexOf('/user') === -1) || 
       url.indexOf('/shop/app/v1/maxcards') !== -1) {
@@ -105,8 +142,8 @@ try {
   }
 
   // ==========================================================
-  // 4. 权益使用情况 - 配额展示
-  //    dmind.luojilab.com/voicenotes/mind/app/v1/user/rights/usage
+  // 6. 权益使用情况
+  //    dmind/voicenotes/mind/app/v1/user/rights/usage
   // ==========================================================
   if (url.indexOf('/user/rights/usage') !== -1) {
     if (obj.c) {
@@ -118,16 +155,44 @@ try {
       if (obj.c.knowledge_topic) {
         obj.c.knowledge_topic.granted = '1TB';
         obj.c.knowledge_topic.remaining = '1TB';
+        obj.c.knowledge_topic.used = '已用0B';
+        obj.c.knowledge_topic.should_hide = false;
       }
       if (obj.c.voice_card) {
         obj.c.voice_card.should_hide = false;
       }
     }
-    console.log('GetNotes: /rights/usage -> quotas display maxed');
+    console.log('GetNotes: /rights/usage -> quotas maxed');
   }
 
   // ==========================================================
-  // 5. 购买 - 伪造成功
+  // 7. 发芽 - 配额无限
+  //    dmind/voicenotes/mind/app/v1/user/sprout/user_situation
+  //    get-notes/voicenotes/web/user/sprouts/month_summary
+  // ==========================================================
+  if (url.indexOf('/user/sprout/user_situation') !== -1) {
+    if (obj.c) {
+      obj.c.remained_seeds_count = 9999;
+      obj.c.month_max_trigger_count = 9999;
+      obj.c.is_month_quota_exhausted = false;
+      obj.c.is_unlimited_seed_quota = true;
+    }
+    console.log('GetNotes: /sprout/user_situation -> unlimited');
+  }
+
+  if (url.indexOf('/sprouts/month_summary') !== -1) {
+    if (obj.c) {
+      obj.c.month_max_trigger_count = 9999;
+      obj.c.already_triggered_count = 0;
+      obj.c.remained_triggers_count = 9999;
+      obj.c.is_unlimited_quota = true;
+      obj.c.can_trigger_new_task = true;
+    }
+    console.log('GetNotes: /sprouts/month_summary -> unlimited');
+  }
+
+  // ==========================================================
+  // 8. 购买/轮询 - 伪造成功
   // ==========================================================
   if (url.indexOf('/vipcards/purchase') !== -1) {
     if (obj.c) {
@@ -137,9 +202,6 @@ try {
     console.log('GetNotes: /purchase -> success');
   }
 
-  // ==========================================================
-  // 6. 轮询 - 支付成功
-  // ==========================================================
   if (url.indexOf('/vipcards/polling') !== -1) {
     if (obj.c) {
       obj.c.status = 1;
@@ -149,7 +211,7 @@ try {
   }
 
   // ==========================================================
-  // 7. 活动检查 - 可领取
+  // 9. 活动检查
   // ==========================================================
   if (url.indexOf('/activity/education_2025/prize/check') !== -1) {
     if (obj.c) {
@@ -159,14 +221,6 @@ try {
       obj.c.claim_info = { claimed: false, can_claim: true };
     }
     console.log('GetNotes: /prize/check -> can claim');
-  }
-
-  // ==========================================================
-  // 8. normal/check - 保留原始数据，不做破坏
-  // ==========================================================
-  if (url.indexOf('/voicenotes/mind/app/v1/normal/check') !== -1) {
-    // 透传，不做修改以免破坏活动配置
-    console.log('GetNotes: /normal/check -> passthrough');
   }
 
   $done({body: JSON.stringify(obj)});

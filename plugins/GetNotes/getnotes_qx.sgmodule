@@ -1,19 +1,28 @@
 #!name = 得到大脑 VIP 解锁
-#!desc = 解锁得到大脑 GetNotes VIP会员 + PRO权益 + AI对话无限 + 配额全满
+#!desc = 解锁得到大脑 GetNotes VIP会员 + 专家版 + 发芽无限 + 记忆全开
 #!author = Minis
 #!home = https://github.com/Leslie159357/Loon-Plugins
 #!icon = https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/54/0c/c7/540cc749-3627-3dd5-1978-9c88b374b550/AppIcon-0-0-1x_U007emarketing-0-7-0-0-0-85-220.png
 #!system = ios
 #!date = 2026-06-08
-#!version = 2.2
+#!version = 2.3
 
 [Script]
+# VIP核心（新增：ddbrain域名）
+http-response ^https?:\/\/ddbrain\.\w+\.\w+\/vip\/info script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/GetNotes/getnotes_qx.js, requires-body=true, timeout=10, tag=GetNotes-ddbrain VIP
+http-response ^https?:\/\/ddbrain\.\w+\.\w+\/yoda\/app\/v1\/xiaobu\/memory-stats script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/GetNotes/getnotes_qx.js, requires-body=true, timeout=10, tag=GetNotes-记忆统计
+http-response ^https?:\/\/ddbrain\.\w+\.\w+\/yoda\/app\/v1\/xiaobu\/persona-triggered script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/GetNotes/getnotes_qx.js, requires-body=true, timeout=10, tag=GetNotes-人格触发
+
 # VIP用户信息
 http-response ^https?:\/\/dmind\.luojilab\.com\/voicenotes\/mind\/app\/v1\/user\/info$ script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/GetNotes/getnotes_qx.js, requires-body=true, timeout=10, tag=GetNotes-用户信息
 http-response ^https?:\/\/get-notes\.luojilab\.com\/voicenotes\/web\/user\/info$ script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/GetNotes/getnotes_qx.js, requires-body=true, timeout=10, tag=GetNotes-WEB用户信息
 
-# 权益使用情况
+# 权益使用
 http-response ^https?:\/\/dmind\.luojilab\.com\/voicenotes\/mind\/app\/v1\/user\/rights\/usage script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/GetNotes/getnotes_qx.js, requires-body=true, timeout=10, tag=GetNotes-权益使用
+
+# 发芽配额
+http-response ^https?:\/\/dmind\.luojilab\.com\/voicenotes\/mind\/app\/v1\/user\/sprout\/user_situation script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/GetNotes/getnotes_qx.js, requires-body=true, timeout=10, tag=GetNotes-发芽配额
+http-response ^https?:\/\/get-notes\.luojilab\.com\/voicenotes\/web\/user\/sprouts\/month_summary script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/GetNotes/getnotes_qx.js, requires-body=true, timeout=10, tag=GetNotes-发芽月报
 
 # VIP卡信息（两个域名）
 http-response ^https?:\/\/(dmind\.luojilab\.com|notes-api\.biji\.com)\/.+vipcards\/user script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/GetNotes/getnotes_qx.js, requires-body=true, timeout=10, tag=GetNotes-VIP卡信息
@@ -28,4 +37,4 @@ http-response ^https?:\/\/dmind\.luojilab\.com\/shop\/mind\/app\/v1\/vipcards\/p
 http-response ^https?:\/\/dmind\.luojilab\.com\/shop\/mind\/app\/v1\/activity\/education_2025\/prize\/check script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/GetNotes/getnotes_qx.js, requires-body=true, timeout=10, tag=GetNotes-活动检查
 
 [Mitm]
-hostname = %APPEND% dmind.luojilab.com, notes-api.biji.com, get-notes.luojilab.com
+hostname = %APPEND% dmind.luojilab.com, notes-api.biji.com, get-notes.luojilab.com, ddbrain.*.com
