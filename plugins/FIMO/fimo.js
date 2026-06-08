@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FIMO VIP Unlock
-// @version      1.0.0
-// @description  解锁FIMO相机全部VIP功能 - 会员状态 + 免费胶卷 + 订阅配置修改
+// @version      1.1.0
+// @description  解锁FIMO相机全部VIP功能 - subscribe.valid + forever + film special改为free
 // @author       Minis
 // @license      MIT
 // ==/UserScript==
@@ -9,27 +9,34 @@
 var url = $request.url;
 var body = $response.body;
 
-// ========== 1. /fimo-user/user - 用户信息（VIP状态） ==========
+// ========== 1. /fimo-user/user - 用户信息（VIP核心接口） ==========
+// 实际JSON:
+// {
+//   "user": { "id":6220507, "name":"FIMO_BD44EE", ... },
+//   "films": [{ "goodId":"fimoBusiness400", "pay":"free"|"sync", ... }],
+//   "filmsCommonOrder": [],
+//   "subscribe": { "valid": false, "forever": 0, "endTime": 0 }
+// }
 if (url.indexOf('/fimo-user/user') !== -1) {
   if (body) {
     try {
       var obj = JSON.parse(body);
-      if (obj && typeof obj === 'object') {
-        var target = obj.data || obj;
-        target.isVip = true;
-        target.vip = true;
-        target.isPro = true;
-        target.isPremium = true;
-        target.isMember = true;
-        target.member = true;
-        target.pro = true;
-        target.premium = true;
-        target.vipType = 1;
-        target.isYearVip = true;
-        target.canUseAllFilms = true;
-        target.vipExpire = 4092599349000;
-        target.vipExpireDate = "2099-12-31 23:59:59";
-        target.vip_expire = 4092599349000;
+      if (obj && obj.subscribe) {
+        // 核心: 设置subscribe字段
+        obj.subscribe.valid = true;
+        obj.subscribe.forever = 1;
+        obj.subscribe.endTime = 4092599349000;
+
+        // 同步films中所有项为已购买
+        if (obj.films && obj.films.length > 0) {
+          for (var i = 0; i < obj.films.length; i++) {
+            var f = obj.films[i];
+            // pay: "free" = 免费, "sync" = 同步已购买
+            // 改为已购买状态
+            f.pay = "sync";
+            f.photo = 999;
+          }
+        }
       }
       $done({body: JSON.stringify(obj)});
     } catch (e) {
@@ -41,28 +48,31 @@ if (url.indexOf('/fimo-user/user') !== -1) {
   return;
 }
 
-// ========== 2. /fimo-common/film - 胶卷列表（解锁全部胶卷） ==========
-if (url.indexOf('/fimo-common/film') !== -1) {
+// ========== 2. /fimo-common/filmAll - 全部胶卷列表 ==========
+// 实际JSON: 胶卷数组 [{ "id":60200, "special":"vip", "isPurchase":1, "price":"3", ... }]
+if (url.indexOf('/fimo-common/filmAll') !== -1 || url.indexOf('/fimo-common/film') !== -1) {
   if (body) {
     try {
       var obj = JSON.parse(body);
-      if (obj && typeof obj === 'object') {
-        var filmData = obj.data || obj;
-        var filmList = filmData.filmList || filmData.films || [];
-        if (filmList.length === undefined) {
-          // 不是数组，可能是对象形式
-          filmList = [];
+      if (obj && obj.length > 0) {
+        // 是数组格式
+        for (var i = 0; i < obj.length; i++) {
+          var film = obj[i];
+          film.special = "free";
+          film.isPurchase = 0;
+          film.price = "0";
+          film.status = 1;
+          if (film.vip === true) film.vip = false;
         }
-        for (var i = 0; i < filmList.length; i++) {
-          var film = filmList[i];
-          film.isFree = true;
-          film.isLocked = false;
-          film.locked = false;
-          film.needVip = false;
-          film.canUse = true;
-          film.price = 0;
-          if (film.vip) film.vip = false;
-          if (film.isVipFilm) film.isVipFilm = false;
+      } else if (obj && obj.data) {
+        // 可能是对象套data格式
+        var list = obj.data.filmList || obj.data.films || [];
+        for (var i = 0; i < list.length; i++) {
+          var film = list[i];
+          film.special = "free";
+          film.isPurchase = 0;
+          film.price = "0";
+          film.status = 1;
         }
       }
       $done({body: JSON.stringify(obj)});
@@ -96,17 +106,40 @@ if (url.indexOf('/fimo-common/subscribeConfig') !== -1) {
   return;
 }
 
-// ========== 4. /fimo-common/apple/certificate - 收据验证 ==========
+// ========== 4. /fimo-common/subscribeSimpleConfig - 简单订阅配置 ==========
+if (url.indexOf('/fimo-common/subscribeSimpleConfig') !== -1) {
+  if (body) {
+    try {
+      var obj = JSON.parse(body);
+      if (obj) {
+        // subscribeSimpleConfig: [{ "sku":"fimo.camera.1year", "forever":0 }, ...]
+        // 不需要修改，放行
+      }
+      $done({body: JSON.stringify(obj)});
+    } catch (e) {
+      $done({});
+    }
+  } else {
+    $done({});
+  }
+  return;
+}
+
+// ========== 5. /fimo-common/apple/certificate - 收据验证 ==========
 if (url.indexOf('/apple/certificate') !== -1) {
   if (body) {
     try {
       var obj = JSON.parse(body);
       if (obj && typeof obj === 'object') {
         obj.status = 0;
+        obj.isVip = true;
         if (obj.data) {
           obj.data.isVip = true;
           obj.data.vip = true;
           obj.data.vipExpire = 4092599349000;
+          obj.data.valid = true;
+          obj.data.forever = 1;
+          obj.data.endTime = 4092599349000;
           obj.data.expiration_date = "2099-12-31";
           obj.data.is_trial_period = false;
           obj.data.is_in_intro_offer_period = false;
@@ -123,38 +156,46 @@ if (url.indexOf('/apple/certificate') !== -1) {
   return;
 }
 
-// ========== 5. /fimo-common/apple/purchase - 购买处理 ==========
+// ========== 6. /fimo-common/apple/purchase - 购买处理 ==========
 if (url.indexOf('/apple/purchase') !== -1) {
   if (body) {
     try {
       var obj = JSON.parse(body);
       if (obj && typeof obj === 'object') {
         obj.status = 0;
+        obj.isVip = true;
         if (obj.data) {
           obj.data.isVip = true;
           obj.data.vip = true;
           obj.data.vipExpire = 4092599349000;
+          obj.data.valid = true;
+          obj.data.forever = 1;
+          obj.data.endTime = 4092599349000;
         }
       }
       $done({body: JSON.stringify(obj)});
     } catch (e) {
-      $done({body: JSON.stringify({"status":0,"data":{"isVip":true,"vip":true,"vipExpire":4092599349000}})});
+      $done({body: JSON.stringify({"status":0,"isVip":true,"data":{"isVip":true,"valid":true,"forever":1,"endTime":4092599349000}})});
     }
   } else {
-    $done({body: JSON.stringify({"status":0,"data":{"isVip":true,"vip":true,"vipExpire":4092599349000}})});
+    $done({body: JSON.stringify({"status":0,"isVip":true,"data":{"isVip":true,"valid":true,"forever":1,"endTime":4092599349000}})});
   }
   return;
 }
 
-// ========== 6. /fimo-user/user/sync - 用户数据同步 ==========
+// ========== 7. /fimo-user/user/sync - 用户数据同步 ==========
 if (url.indexOf('/fimo-user/user/sync') !== -1) {
   if (body) {
     try {
       var obj = JSON.parse(body);
-      if (obj && typeof obj === 'object') {
-        var target = obj.data || obj;
-        target.isVip = true;
-        target.vip = true;
+      if (obj && obj.subscribe) {
+        obj.subscribe.valid = true;
+        obj.subscribe.forever = 1;
+        obj.subscribe.endTime = 4092599349000;
+      } else if (obj && obj.data && obj.data.subscribe) {
+        obj.data.subscribe.valid = true;
+        obj.data.subscribe.forever = 1;
+        obj.data.subscribe.endTime = 4092599349000;
       }
       $done({body: JSON.stringify(obj)});
     } catch (e) {
@@ -166,15 +207,13 @@ if (url.indexOf('/fimo-user/user/sync') !== -1) {
   return;
 }
 
-// ========== 7. /fimo-common/config - 配置 ==========
-if (url.indexOf('/fimo-common/config') !== -1) {
+// ========== 8. /fimo-user/user/online - 在线状态 ==========
+if (url.indexOf('/fimo-user/user/online') !== -1) {
   if (body) {
     try {
       var obj = JSON.parse(body);
       if (obj && typeof obj === 'object') {
-        var target = obj.data || obj;
-        target.isVip = true;
-        target.vip = true;
+        // 透传，不需要修改
       }
       $done({body: JSON.stringify(obj)});
     } catch (e) {
@@ -186,21 +225,65 @@ if (url.indexOf('/fimo-common/config') !== -1) {
   return;
 }
 
-// ========== 兜底：如果是JSON但没命中特定接口，尝试替换所有VIP字段 ==========
+// ========== 9. /fimo-common/startPopConfig - 启动弹窗配置 ==========
+if (url.indexOf('/fimo-common/startPopConfig') !== -1) {
+  if (body) {
+    try {
+      var obj = JSON.parse(body);
+      if (obj && obj.id !== undefined) {
+        // 透传
+      }
+      $done({body: JSON.stringify(obj)});
+    } catch (e) {
+      $done({});
+    }
+  } else {
+    $done({});
+  }
+  return;
+}
+
+// ========== 10. /fimo-common/sysconfig - 系统配置 ==========
+if (url.indexOf('/fimo-common/sysconfig') !== -1) {
+  if (body) {
+    try {
+      var obj = JSON.parse(body);
+      if (obj && obj.data !== undefined) {
+        // 透传
+      }
+      $done({body: JSON.stringify(obj)});
+    } catch (e) {
+      $done({});
+    }
+  } else {
+    $done({});
+  }
+  return;
+}
+
+// ========== 兜底：路过所有JSON，尝试修改VIP相关字段 ==========
 if (body) {
   try {
     var obj = JSON.parse(body);
-    if (obj && typeof obj === 'object' && !obj.productList) {
-      var vipKeys = ['vip', 'isVip', 'isPro', 'isPremium', 'isMember', 'member', 'pro', 'premium', 'canUseAllFilms', 'isYearVip', 'vipType'];
-      for (var k = 0; k < vipKeys.length; k++) {
-        var key = vipKeys[k];
-        if (obj[key] !== undefined) {
-          if (typeof obj[key] === 'boolean') obj[key] = true;
-          if (key === 'vipType') obj[key] = 1;
-        }
-        if (obj.data && obj.data[key] !== undefined) {
-          if (typeof obj.data[key] === 'boolean') obj.data[key] = true;
-          if (key === 'vipType' && obj.data) obj.data[key] = 1;
+    if (obj && typeof obj === 'object') {
+      // 检查是否有subscribe字段
+      if (obj.subscribe) {
+        obj.subscribe.valid = true;
+        obj.subscribe.forever = 1;
+        obj.subscribe.endTime = 4092599349000;
+      }
+      if (obj.user && obj.user.subscribe) {
+        obj.user.subscribe.valid = true;
+        obj.user.subscribe.forever = 1;
+      }
+      // 检查是否包含special=vip的胶卷
+      if (obj.length > 0 && obj[0].special !== undefined) {
+        for (var i = 0; i < obj.length; i++) {
+          if (obj[i].special === "vip") {
+            obj[i].special = "free";
+            obj[i].isPurchase = 0;
+            obj[i].price = "0";
+          }
         }
       }
       $done({body: JSON.stringify(obj)});
