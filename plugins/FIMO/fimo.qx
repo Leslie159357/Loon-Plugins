@@ -1,0 +1,9 @@
+[rewrite_local]
+^https:\/\/fimo\.appfimo\.com\/fimo-user\/user$ url script-response-body https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/FIMO/fimo.js
+^https:\/\/fimo\.appfimo\.com\/fimo-common\/filmAll url script-response-body https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/FIMO/fimo.js
+^https:\/\/fimo\.appfimo\.com\/fimo-common\/subscribeConfig$ url script-response-body https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/FIMO/fimo.js
+^https:\/\/fimo\.appfimo\.com\/fimo-common\/apple\/certificate$ url script-response-body https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/FIMO/fimo.js
+^https:\/\/fimo\.appfimo\.com\/fimo-common\/apple\/purchase$ url script-response-body https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/FIMO/fimo.js
+
+[mitm]
+hostname = fimo.appfimo.com
