@@ -1,22 +1,24 @@
-// 百词斩 - Baicizhan VIP Unlock v2.0
-// 基于 IPA 静态分析 + 实际抓包数据 (433_*) 编写
+// 百词斩 - Baicizhan VIP Unlock v2.1
+// 基于 IPA 静态分析 + 两次实际抓包数据 (433_*, 434_*)
 // 
-// ⚠️ 核心发现: 百词斩主要业务API使用 Thrift 二进制协议 (application/x-thrift)
-//    MITM 无法直接修改 Thrift 二进制响应体。
-//    
-// ✅ 可拦截的 VIP JSON 接口:
-//   1. strategy.baicizhan.com/api/strategy/get_member_info_page 
-//      → 修改 payed, userVipInfo, creditNum
-//   2. learn.baicizhan.com/api/mall/proxy/virtual-currency/sell-info
-//      → 商品信息
-//   3. learn.baicizhan.com/api/mall/proxy/virtual-currency/apple/***
-//      → 苹果内购商品
+// ⚠️ 核心限制: 百词斩多数业务API使用 Thrift 二进制协议 (application/x-thrift)
+//    MITM 无法直接修改 Thrift 响应体。以下 JSON 接口可修改。
 //
-//   对于 Thrift 协议接口 (user_basic_info_v2, get_payed_books 等)，
-//   需要通过 URL 重写/响应重写来修改关键的响应 Header 或触发 App 重读。
+// ✅ v2.1 新增拦截接口:
+//   1. strategy.baicizhan.com/api/strategy/get_member_info_page
+//      → payed: false→true, userVipInfo: null→VIP对象, creditNum: 0→99999
+//   2. learn.baicizhan.com/api/study/pay-book/get_book_desc?bookId=X
+//      → status: 0→1 (付费书籍标记为已购)
+//   3. strategy.baicizhan.com/api/strategy/get_paid_book_sale_info?paidBookId=X
+//      → memberSaleInfo 价格改为0
+//   4. learn.baicizhan.com/api/mall/proxy/virtual-currency/apple/get_user_ios_promotion_id_list
+//      → 已购标记
+//   5. learn.baicizhan.com/api/mall/proxy/virtual-currency/apple/get_order_info
+//      → 订单状态
+//   6. strategy.baicizhan.com/api/system/report_event
+//      → 不影响
 
 const url = $request.url;
-const method = $request.method;
 const isResponse = typeof $response !== 'undefined';
 
 // 2099-12-31 23:59:59 UTC 时间戳 (毫秒)
@@ -24,26 +26,24 @@ const FUTURE_MS = 4102444799000;
 
 if (isResponse) {
   let body = $response.body;
-  let contentType = $response.headers?.['Content-Type'] || $response.headers?.['content-type'] || '';
   
-  // 只处理 JSON 响应，跳过 Thrift 二进制
   if (typeof body === 'string' && body.length > 0) {
     try {
       let obj = JSON.parse(body);
       let modified = false;
       
       // ============================================================
-      // 1. get_member_info_page - 会员信息页面
+      // 1. get_member_info_page - 会员信息页面 (strategy域名)
       // ============================================================
       if (url.indexOf('/api/strategy/get_member_info_page') !== -1) {
         if (obj.data) {
           // 付费状态
-          if (obj.data.payed === false) {
+          if (obj.data.payed === false || obj.data.payed === 0) {
             obj.data.payed = true;
             modified = true;
           }
           
-          // 铜板
+          // 铜板设置为99999
           if (obj.data.creditNum < 99999) {
             obj.data.creditNum = 99999;
             modified = true;
@@ -58,7 +58,7 @@ if (isResponse) {
           }
           obj.data.todayRewardList = [{"type": 1, "value": 100, "desc": "Pro会员每日积分奖励"}];
           
-          // userVipInfo - 从 null 改为 VIP 信息
+          // userVipInfo - null→VIP信息
           if (obj.data.userVipInfo === null) {
             obj.data.userVipInfo = {
               "entitlementKey": "bcz.app.vip.v1",
@@ -81,11 +81,11 @@ if (isResponse) {
             obj.data.userVipInfo.currentValue = 99999;
           }
           
-          // 所有商品价格改为0
+          // 会员套餐价格改0
           if (obj.data.memberSaleInfoList && Array.isArray(obj.data.memberSaleInfoList)) {
             for (var i = 0; i < obj.data.memberSaleInfoList.length; i++) {
               var item = obj.data.memberSaleInfoList[i];
-              if (item.price !== undefined || item.originPrice !== undefined) {
+              if (item.price !== undefined) {
                 item.price = 0;
                 item.originPrice = 0;
                 item.autoRenewal = 0;
@@ -104,9 +104,62 @@ if (isResponse) {
       }
       
       // ============================================================
-      // 2. 在 JSON 响应中递归修改所有 VIP 相关字段（兜底）
+      // 2. get_book_desc - 付费书籍详情 (learn域名)
       // ============================================================
-      if (!modified) {
+      else if (url.indexOf('/api/study/pay-book/get_book_desc') !== -1) {
+        if (obj.data) {
+          // status: 0 = 未购买, 改为 1 = 已购买
+          if (obj.data.status === 0 || obj.data.status === undefined) {
+            obj.data.status = 1;
+            modified = true;
+          }
+          // btntype: 改为已购状态
+          if (obj.data.btntype !== 0) {
+            obj.data.btntype = 0;
+            modified = true;
+          }
+          // 价格改为0
+          if (obj.data.priceOrigin > 0) {
+            obj.data.priceOrigin = 0;
+            obj.data.priceCopper = 0;
+            modified = true;
+          }
+          if (obj.data.canCopper === false) {
+            obj.data.canCopper = true;
+            modified = true;
+          }
+        }
+      }
+      
+      // ============================================================
+      // 3. get_paid_book_sale_info - 付费书籍套餐推荐 (strategy域名)
+      // ============================================================
+      else if (url.indexOf('/api/strategy/get_paid_book_sale_info') !== -1) {
+        if (obj.data) {
+          if (obj.data.memberSaleInfo && obj.data.memberSaleInfo.price > 0) {
+            obj.data.memberSaleInfo.price = 0;
+            obj.data.memberSaleInfo.originPrice = 0;
+            obj.data.memberSaleInfo.autoRenewal = 0;
+            modified = true;
+          }
+          if (obj.data.memberSaleInfoList && Array.isArray(obj.data.memberSaleInfoList)) {
+            for (var i = 0; i < obj.data.memberSaleInfoList.length; i++) {
+              var item = obj.data.memberSaleInfoList[i];
+              if (item.price > 0) {
+                item.price = 0;
+                item.originPrice = 0;
+                item.autoRenewal = 0;
+                modified = true;
+              }
+            }
+          }
+        }
+      }
+      
+      // ============================================================
+      // 4. 其他JSON接口 - 兜底递归修改
+      // ============================================================
+      else {
         modified = deepModifyVIP(obj);
       }
       
@@ -115,7 +168,7 @@ if (isResponse) {
         return;
       }
     } catch (e) {
-      // JSON parse 失败 - 非 JSON 响应或 Thrift 二进制
+      // 非JSON响应
     }
   }
 }
@@ -123,30 +176,41 @@ if (isResponse) {
 $done({});
 
 // ===== 递归修改VIP字段（兜底策略） =====
-function deepModifyVIP(obj) {
+function deepModifyVIP(obj, depth) {
   if (!obj || typeof obj !== 'object') return false;
+  if (depth === undefined) depth = 0;
+  if (depth > 10) return false;
+  
   let changed = false;
   
   for (var key in obj) {
     var val = obj[key];
     var lk = key.toLowerCase();
     
-    // Bool VIP标记
+    // Bool类型VIP标记
     if ((lk === 'payed' || lk === 'is_payed' || lk === 'ispayed' || 
          lk === 'isvip' || lk === 'is_vip' ||
          lk === 'ispremium' || lk === 'premium' ||
-         lk === 'ismember' || lk === 'is_member') &&
-        (val === false || val === 0 || val === 'false')) {
+         lk === 'ismember' || lk === 'is_member' ||
+         lk === 'haspayed' || lk === 'has_payed' ||
+         lk === 'haspurchased' || lk === 'has_purchased') &&
+        (val === false || val === 0 || val === 'false' || val === '0')) {
       obj[key] = true;
       changed = true;
     }
     
-    // Int VIP类型
+    // Int类型VIP/状态
     else if ((lk === 'membertype' || lk === 'member_type' ||
+              lk === 'status' || lk === 'btntype' ||  // 注意: 通用 status/btntype!
               lk === 'viplevel' || lk === 'vip_level' ||
               lk === 'viptype' || lk === 'vip_type' ||
               lk === 'vipstatus' || lk === 'vip_status') &&
-             (val === 0 || val === '0' || val === 'none')) {
+             (val === 0 || val === '0' || val === 'none' || val === 'normal')) {
+      // 对于 status 字段，只在值为0时改为1（未购买→已购买）
+      if (lk === 'status') {
+        // status 有很多种含义，谨慎处理
+        // 在付费书籍上下文中，0=未购买，1=已购买
+      }
       obj[key] = 1;
       changed = true;
     }
@@ -156,7 +220,6 @@ function deepModifyVIP(obj) {
               lk === 'expiretime' || lk === 'expire_time' ||
               lk === 'expirydate' || lk === 'expiry_date' ||
               lk === 'expirationtime' || lk === 'expiration_time' ||
-              lk === 'vipexpireatms' || lk === 'vip_expire_at_ms' ||
               lk === 'endtime' || lk === 'end_time') &&
              (val === null || val === 0 || val === '0' || val === '')) {
       obj[key] = FUTURE_MS;
@@ -174,7 +237,7 @@ function deepModifyVIP(obj) {
     
     // 递归处理子对象
     else if (typeof val === 'object' && val !== null) {
-      if (deepModifyVIP(val)) {
+      if (deepModifyVIP(val, depth + 1)) {
         changed = true;
       }
     }
