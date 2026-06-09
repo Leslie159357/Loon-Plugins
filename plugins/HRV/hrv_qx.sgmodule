@@ -1,0 +1,21 @@
+# 解压小橙子 (HRV) 会员解锁 v1.0
+# 基于 IPA 静态分析：Flutter + ObjC 混合架构
+# PayServer 支付 + 自有 VIP API
+# 
+# 安装方法：Quantumult X → 右下角三图标 → 模块 → 右上角➕ → 粘贴本链接
+#
+# 使用前请确保：
+# 1. MitM 已开启
+# 2. MitM → 主机名 中已添加下方 hostname 中的域名
+# 3. 安装后杀掉 App 重新打开
+
+[Script]
+http-response ^https?:\/\/termapi\.belikehub\.com:12000\/PayServer\/api\/v3\/ requires-body=1,script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/HRV/hrv_qx.js
+http-response ^https?:\/\/termapi\.belikehub\.com:12000\/PayServer\/pay\/ requires-body=1,script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/HRV/hrv_qx.js
+http-response ^https?:\/\/termapi\.belikehub\.com:12000\/PayServer\/givenGift\/ requires-body=1,script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/HRV/hrv_qx.js
+http-response ^https?:\/\/termapi\.belikehub\.com:12000\/PayServer\/payAuth\/ requires-body=1,script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/HRV/hrv_qx.js
+http-response ^https?:\/\/termapi\.belikehub\.com:12000\/PayServer\/refund\/ requires-body=1,script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/HRV/hrv_qx.js
+http-response ^https?:\/\/termapi\.belikehub\.com:12000\/ requires-body=1,script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/HRV/hrv_qx.js
+
+[MITM]
+hostname = termapi.belikehub.com:12000, icogquu-zlr.belikehub.com, ejcvirv.belikehub.com
