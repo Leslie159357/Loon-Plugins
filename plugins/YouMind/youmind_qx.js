@@ -1,8 +1,8 @@
-// ==ClawHub/YouMind Max Unlock v3.2==
-// @version 3.2
-// @description 修复 installSkill 403 -> 伪造成功响应
+// ==ClawHub/YouMind Max Unlock v3.3==
+// @version 3.3
+// @description installSkill->伪造成功, listInstalledSkills->注入新技能
 // @mitm hello-lucy.com
-// ==/ClawHub/YouMind Max Unlock v3.2==
+// ==/ClawHub/YouMind Max Unlock v3.3==
 
 const url = $request.url;
 const method = $request.method;
@@ -12,21 +12,17 @@ if (!url.includes("hello-lucy.com") || (method !== "GET" && method !== "POST")) 
   return;
 }
 
-// 特殊处理 installSkill —— 服务端返回 403，需要完全伪造成功响应
+// 拦截 installSkill —— 直接返回成功，不走服务端
 if (url.includes("/api/v1/skill/installSkill/")) {
-  // 伪造安装成功
-  const fakeResponse = {
-    status: "OK"
-  };
-  $done({
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(fakeResponse)
-  });
+  $done({ status: 200, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "OK" }) });
+  return;
+}
+// 拦截 uninstallSkill
+if (url.includes("/api/v1/skill/uninstallSkill/")) {
+  $done({ status: 200, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "OK" }) });
   return;
 }
 
-// 其他接口正常修改
 let body = $response.body;
 if (!body || body.length < 10) {
   $done({});
