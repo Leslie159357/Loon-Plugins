@@ -1,18 +1,32 @@
-// ==ClawHub/YouMind Max Unlock v3.1==
-// @version 3.1
-// @description 修复 getSkill/{uuid} 匹配问题，拦截所有 hello-lucy API
+// ==ClawHub/YouMind Max Unlock v3.2==
+// @version 3.2
+// @description 修复 installSkill 403 -> 伪造成功响应
 // @mitm hello-lucy.com
-// ==/ClawHub/YouMind Max Unlock v3.1==
+// ==/ClawHub/YouMind Max Unlock v3.2==
 
 const url = $request.url;
 const method = $request.method;
 
-// 只拦截 hello-lucy.com 的 API 响应
 if (!url.includes("hello-lucy.com") || (method !== "GET" && method !== "POST")) {
   $done({});
   return;
 }
 
+// 特殊处理 installSkill —— 服务端返回 403，需要完全伪造成功响应
+if (url.includes("/api/v1/skill/installSkill/")) {
+  // 伪造安装成功
+  const fakeResponse = {
+    status: "OK"
+  };
+  $done({
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(fakeResponse)
+  });
+  return;
+}
+
+// 其他接口正常修改
 let body = $response.body;
 if (!body || body.length < 10) {
   $done({});
@@ -61,7 +75,7 @@ try {
         delete obj[key];
       }
       if (key === "price" && typeof val === "number" && val > 0) {
-        obj[key] = 0;  // Free!
+        obj[key] = 0;
       }
       
       // ========== Balance (all max) ==========
