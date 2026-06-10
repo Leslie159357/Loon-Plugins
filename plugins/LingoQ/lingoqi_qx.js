@@ -1,21 +1,21 @@
-// LingoQ VIP Unlock - MITM Script v2.0
+// LingoQ VIP Unlock - MITM Script v2.1
 // QX & Loon 通用
-// 基于抓包验证的实际 API 结构
+// 基于抓包数据: 修复盗版提示+字幕劫持
 // Bundle ID: com.lingoq.ios.lingeqi
 
 // =============================================
-// 配置区 - 基于实际抓包数据
+// 配置区
 // =============================================
 
+// 空字幕内容（替换掉服务端下发的盗版提示字幕）
+const EMPTY_SUBTITLE = '{"sentences":[]}';
+
+// VIP 字段配置
 const VIP_CONFIG = {
     // VIP 核心字段（来自 /usercenter-facade-app-prod/users/index）
     vip: true,
     lifetimeVip: true,
     vipLeftDays: 99999,
-    
-    // 试用/播放权限（来自 video/player/info 等）
-    trialState: 1,
-    videoState: 1,
     
     // 订阅/会员状态
     isVip: true,
@@ -116,9 +116,9 @@ const VIP_CONFIG = {
     signInDays: 999,
 };
 
-// 需要特殊处理的路径（不进行修改直接透传）
+// 需要特殊处理的路径（直接透传）
 const PASSTHROUGH_PATHS = [
-    '.m3u8', '.ts', '.jpg', '.png', '.json', '.wav', '.mp3', '.gif',
+    '.m3u8', '.ts', '.jpg', '.png', '.gif', '.wav', '.mp3',
 ];
 
 // VIP相关Key名（递归匹配用）
@@ -136,11 +136,6 @@ const VIP_KEYS = [
     'receipt', 'verify',
     'codeRedemption', 'redemption',
     'signInDays', 'sign_in_days',
-];
-
-// 需要被清空的弹窗/Popup 字段
-const EMPTY_FIELDS = [
-    'popup_info', 'popupPoints', 'popupPointSize',
 ];
 
 // =============================================
@@ -162,21 +157,15 @@ function recursiveModify(obj, path = '') {
         const currentPath = path ? path + '.' + key : key;
         const keyLower = key.toLowerCase();
         
-        // 检查是否匹配VIP配置（精确匹配优先）
+        // 精确匹配VIP配置
         if (VIP_CONFIG.hasOwnProperty(key)) {
             obj[key] = VIP_CONFIG[key];
             continue;
         }
         
-        // 清除弹窗/弹出点
-        if (EMPTY_FIELDS.includes(key)) {
-            if (typeof val === 'number') {
-                obj[key] = 0;
-            } else if (Array.isArray(val)) {
-                obj[key] = [];
-            } else if (typeof val === 'object') {
-                obj[key] = {};
-            }
+        // 拦截 subtitleUrl - 替换盗版提示字幕
+        if (keyLower === 'subtitleurl' && typeof val === 'string' && val.includes('oss.lingoq.com/video-subtitle/')) {
+            obj[key] = '';  // 清空字幕URL，阻止盗版提示字幕加载
             continue;
         }
         
