@@ -1,5 +1,5 @@
 #!name=Doka Pro Unlock
-#!desc=Doka相机 - 基于抓包数据的 VIP 解锁
+#!desc=Doka相机 - 解锁 Doka Pro VIP（基于抓包 v3）
 #!author=Minis
 #!icon=https://www.yindoka.com/favicon.ico
 
@@ -7,6 +7,10 @@
 hostname = %APPEND% www.yindoka.com
 
 [Script]
-http-response ^https?:\/\/www\.yindoka\.com\/apple\/vip-detail requires-body = 1, script-path = doka_mitm.js, tag = Doka VIP Detail
-http-response ^https?:\/\/www\.yindoka\.com\/apple\/check-subscription-status requires-body = 1, script-path = doka_mitm.js, tag = Doka Subscription
-http-response ^https?:\/\/www\.yindoka\.com\/apple\/validate-receipt requires-body = 1, script-path = doka_mitm.js, tag = Doka Receipt
+http-response ^https?:\/\/www\.yindoka\.com\/apple\/vip-detail requires-body = true, script-path = doka_mitm.js, tag = Doka VIP Detail
+http-response ^https?:\/\/www\.yindoka\.com\/apple\/check-subscription-status requires-body = true, script-path = doka_mitm.js, tag = Doka Subscription
+http-response ^https?:\/\/www\.yindoka\.com\/apple\/validate-receipt requires-body = true, script-path = doka_mitm.js, tag = Doka Receipt
+# 兜底：匹配所有 API 请求
+http-response ^https?:\/\/www\.yindoka\.com\/apple\/ requires-body = true, script-path = doka_mitm.js, tag = Doka Apple All
+http-response ^https?:\/\/www\.yindoka\.com\/app\/config_doka requires-body = true, script-path = doka_mitm.js, tag = Doka Config
+http-response ^https?:\/\/www\.yindoka\.com\/app\/ requires-body = true, script-path = doka_mitm.js, tag = Doka App All
