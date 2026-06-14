@@ -12,6 +12,11 @@
 hostname = %APPEND% www.yindoka.com
 
 [Script]
-http-response ^https?:\/\/www\.yindoka\.com\/apple\/vip-detail script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Doka/doka_qx.js, requires-body=true, timeout=10, tag=Doka VIP Detail
-http-response ^https?:\/\/www\.yindoka\.com\/apple\/check-subscription-status script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Doka/doka_qx.js, requires-body=true, timeout=10, tag=Doka Subscription
-http-response ^https?:\/\/www\.yindoka\.com\/apple\/validate-receipt script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Doka/doka_qx.js, requires-body=true, timeout=10, tag=Doka Receipt
+# vip-detail 拦截
+http-response ^https?:\/\/www\.yindoka\.com\/apple\/vip-detail script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Doka/doka_qx.js, requires-body=true, timeout=10, tag=DokaVIPDetail
+
+# 订阅状态拦截
+http-response ^https?:\/\/www\.yindoka\.com\/apple\/check-subscription-status script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Doka/doka_qx.js, requires-body=true, timeout=10, tag=DokaSubscription
+
+# 收据验证拦截
+http-response ^https?:\/\/www\.yindoka\.com\/apple\/validate-receipt script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Doka/doka_qx.js, requires-body=true, timeout=10, tag=DokaReceipt
