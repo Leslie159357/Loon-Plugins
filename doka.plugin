@@ -1,0 +1,12 @@
+#!name=Doka Pro Unlock
+#!desc=Doka相机 - 基于抓包数据的 VIP 解锁
+#!author=Minis
+#!icon=https://www.yindoka.com/favicon.ico
+
+[MITM]
+hostname = %APPEND% www.yindoka.com
+
+[Script]
+http-response ^https?:\/\/www\.yindoka\.com\/apple\/vip-detail requires-body = 1, script-path = doka_mitm.js, tag = Doka VIP Detail
+http-response ^https?:\/\/www\.yindoka\.com\/apple\/check-subscription-status requires-body = 1, script-path = doka_mitm.js, tag = Doka Subscription
+http-response ^https?:\/\/www\.yindoka\.com\/apple\/validate-receipt requires-body = 1, script-path = doka_mitm.js, tag = Doka Receipt
