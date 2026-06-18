@@ -9,11 +9,11 @@
 #!tag=unlock,漫画,阅读,manga
 
 [Script]
-http-response ^https?:\/\/api\.adapty\.io\/api\/v1\/.*profile script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Yomu/yomu.js, requires-body=true, timeout=10, tag=Yomu Adapty Profile
+# 核心: Analytics Profile — 注入 paid_access_levels premium
+http-response ^https?:\/\/api\.adaptytech\.com\/api\/v1\/sdk\/analytics\/profiles\/[^\/]+\/$ script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Yomu/yomu.js, requires-body=true, timeout=10, tag=Yomu Premium Profile
 
-http-response ^https?:\/\/fallback\.adapty\.io\/api\/v1\/.*profile script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Yomu/yomu.js, requires-body=true, timeout=10, tag=Yomu Adapty Fallback
-
-http-response ^https?:\/\/api-cn\.adapty\.io\/api\/v1\/.*profile script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Yomu/yomu.js, requires-body=true, timeout=10, tag=Yomu Adapty CN
+# 备用: 仿问 paywall variations 可能也需拦截
+http-response ^https?:\/\/api\.adaptytech\.com\/api\/v1\/sdk\/in-apps\/([^\/]+)\/paywall script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Yomu/yomu.js, requires-body=true, timeout=10, tag=Yomu Paywall
 
 [MITM]
-hostname = %APPEND% api.adapty.io, fallback.adapty.io, api-cn.adapty.io
+hostname = %APPEND% api.adaptytech.com

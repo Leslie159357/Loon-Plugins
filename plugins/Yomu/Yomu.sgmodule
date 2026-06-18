@@ -8,9 +8,9 @@
 #!version = 1.0
 
 [Script]
-Yomu-Adapty-Profile = type=http-response, pattern=^https?:\/\/api\.adapty\.io\/api\/v1\/.*profile, requires-body=1, script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Yomu/yomu.js
+Yomu-Premium-Profile = type=http-response, pattern=^https?:\/\/api\.adaptytech\.com\/api\/v1\/sdk\/analytics\/profiles\/[^\/]+\/$, requires-body=1, script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Yomu/yomu.js
 
-Yomu-Adapty-Fallback = type=http-response, pattern=^https?:\/\/fallback\.adapty\.io\/api\/v1\/.*profile, requires-body=1, script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Yomu/yomu.js
+Yomu-Paywall = type=http-response, pattern=^https?:\/\/api\.adaptytech\.com\/api\/v1\/sdk\/in-apps\/([^\/]+)\/paywall, requires-body=1, script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Yomu/yomu.js
 
 [MITM]
-hostname = api.adapty.io, fallback.adapty.io, api-cn.adapty.io
+hostname = api.adaptytech.com
