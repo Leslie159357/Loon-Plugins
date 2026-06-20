@@ -1,25 +1,29 @@
-# Loon 插件合集 🚀
+# 🐟 鱼吃鱼(Dayu) — 资源修改
 
-解锁各类 App Premium / VIP / 会员功能。所有插件适配 **Loon**，使用 MITM + 脚本复写。
+> **游戏**: 鱼吃鱼 (大鱼/Dayu) | 微信 AppId: `wxd705de6e4f88cc89`
+> **引擎**: Unity WebGL | **开发商**: 昆仑游戏/Kunpo
 
-## 插件列表
+## 协议特点
 
-| Plugin | App | 功能 |
-|--------|-----|------|
-| [随便学VIP无限试炼](plugins/SuiBianXue/suibianxue.plugin) | 随便学 (baishiEnglish) | 解锁VIP会员 + 无限试炼次数 |
-| [百词斩Pro会员解锁](plugins/BaiCiZhan/baicizhan.plugin) | 百词斩 | 解锁Pro会员 + 铜板改99999 |
-| [Keep会员解锁](plugins/Keep-Prime/keep_vip.plugin) | Keep | 解锁会员功能 |
-| [懒人听书VIP](plugins/LazyListen/lanrentingshu.plugin) | 懒人听书 | 解锁VIP |
-| [喜马拉雅](plugins/Ximalaya/ximalaya.plugin) | 喜马拉雅 | 解锁会员 |
-| [多邻国](plugins/Duolingo/duolingo.plugin) | Duolingo | Super Duolingo |
-| [每日英语听力](plugins/EnglishDaily/english_daily.plugin) | 每日英语听力 | 解锁VIP |
-| [ELSA Speak](plugins/ELSA-Speak/elsa.plugin) | ELSA Speak | 解锁Pro |
-| [墨墨背单词](plugins/Mimio/mimio.plugin) | 墨墨背单词 | 解锁 |
-| [FitRead](plugins/FitRead/fitread.plugin) | 流利阅读 | 解锁VIP |
-| [EF Hello](plugins/EF-Hello/ef_hello.plugin) | EF Hello | 解锁 |
-| [Memrise](plugins/Memrise/memrise.plugin) | Memrise | 解锁 |
-| [DejaVocab](plugins/DejaVocab/DejaVocab.plugin) | DejaVocab | 解锁 |
-| [InkerSpeak](plugins/InkerSpeak/inkerspeak.plugin) | InkerSpeak | 解锁 |
-| [YouMind](plugins/YouMind/youmind.plugin) | YouMind | 解锁 |
-| [Polypal 会员解锁](plugins/Polypal/polypal.plugin) | Polypal (Timekettle Live Translator) | 解锁VIP会员 - 无限翻译时长 |
-| [墨墨记忆卡 专业版解锁](plugins/Markji/markji.plugin) | 墨墨记忆卡 | 解锁专业版 |
+全部 **明文JSON**，无加密，可直接修改 `update_user_resource` / `update_user_goods` / `update_fish_fragment` 三个接口。
+
+## 使用方法
+
+### Loon
+1. 插件 → 订阅 → 添加 `https://raw.githubusercontent.com/Leslie159357/self-use/main/plugins/Dayu/dayu.plugin`
+2. 开启 HTTPS 解密 (MITM)
+3. 打开鱼吃鱼小程序即可
+
+### Quantumult X
+1. 重写 → 引用 → 添加 `https://raw.githubusercontent.com/Leslie159357/self-use/main/plugins/Dayu/Dayu.conf`
+2. 开启 MITM
+3. 打开鱼吃鱼小程序即可
+
+## 文件清单
+
+| 文件 | 用途 |
+|------|------|
+| `dayu.plugin` | Loon 插件 |
+| `Dayu.conf` | Quantumult X 配置 |
+| `dayu_loon.js` | Loon 脚本 |
+| `dayu_qx.js` | Quantumult X 脚本 |
