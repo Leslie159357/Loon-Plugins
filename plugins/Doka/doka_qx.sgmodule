@@ -1,0 +1,16 @@
+#!name=Doka Pro Unlock
+#!desc=Doka 相机 解锁 Doka Pro VIP + AI 构图无限使用（v2.0 全路径匹配）
+#!author=Minis
+#!home=https://github.com/Leslie159357/Loon-Plugins/tree/main/plugins/Doka
+#!icon=https://www.yindoka.com/favicon.ico
+#!tag=unlock,相机,摄影,Doka
+#!system=ios
+#!date=2026-06-14
+#!version=2.0
+
+[MITM]
+hostname = %APPEND% www.yindoka.com
+
+[Script]
+# 一条规则匹配所有 www.yindoka.com 的响应，内部路由
+http-response ^https?:\/\/www\.yindoka\.com\/.* script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Doka/doka_qx.js, requires-body=true, timeout=10, max-size=2097152, tag=DokaPro

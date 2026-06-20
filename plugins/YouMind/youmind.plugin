@@ -1,0 +1,24 @@
+#!name=YouMind Premium Unlock v1.3
+#!desc=解锁YouMind Pro/Max订阅和积分（AI创作工作室）
+#!author=Leslie159357
+#!home=https://github.com/Leslie159357/Loon-Plugins/tree/main/plugins/YouMind
+#!icon=https://youmind.com/favicon.ico
+#!date=2026-05-26
+#!version=1.3
+#!tag=premium
+
+[MITM]
+hostname = youmind.com
+
+[Script]
+# HTML页面SSR嵌入数据修补（space.status: trialing→active）
+http-response ^https:\/\/youmind\.com\/mobile\/[a-zA-Z0-9_-]+$ script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/YouMind/youmind.js, requires-body=true, timeout=10, tag=YouMind_SSR
+
+# 用户信息API
+http-response ^https:\/\/youmind\.com\/api\/v1\/getCurrentUser$ script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/YouMind/youmind.js, requires-body=true, timeout=10, tag=YouMind_User
+
+# 订阅查询（无订阅→伪造Pro）
+http-response ^https:\/\/youmind\.com\/api\/v1\/subscription\/findSubscription$ script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/YouMind/youmind.js, requires-body=true, timeout=10, tag=YouMind_Sub
+
+# 积分账户（free→pro，积分全满）
+http-response ^https:\/\/youmind\.com\/api\/v1\/credit\/getCreditAccount$ script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/YouMind/youmind.js, requires-body=true, timeout=10, tag=YouMind_Credit

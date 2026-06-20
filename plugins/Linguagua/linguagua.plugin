@@ -1,0 +1,31 @@
+#!name=瓜瓜跟读 Linguagua PRO 解锁 v2.1
+#!desc=永久会员 + 小红花99999无限 + 导入不消耗
+#!author=Minis
+#!homepage=https://github.com/Leslie159357
+#!icon=https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/f8/fc/de/f8fcde78-3bca-12bb-9c95-a4d5a9802ef5/AppIcon-0-0-1x_U007epad-0-1-0-0-0-85-220.png/512x512bb.png
+#!tag=教育,解锁,瓜瓜跟读
+#!system=ios
+#!date=2026-06-08
+#!version=2.1
+
+[Script]
+# 用户信息 - 注入会员状态
+http-response ^https?://api\.lgg\.oranglish\.com/user/info script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Linguagua/linguagua_crack.js, requires-body=true, timeout=10, tag=瓜瓜跟读-用户信息
+
+# 统计 - 小红花无限
+http-response ^https?://api\.lgg\.oranglish\.com/stats/user script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Linguagua/linguagua_crack.js, requires-body=true, timeout=10, tag=瓜瓜跟读-小红花无限
+
+# 导入文章 - 不消耗小红花
+http-response ^https?://api\.lgg\.oranglish\.com/article/check-flower-for-import script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Linguagua/linguagua_crack.js, requires-body=true, timeout=10, tag=瓜瓜跟读-检查导入消耗
+
+# 收据验证 - 返回成功
+http-response ^https?://api\.lgg\.oranglish\.com/membership/verify/apple/receipt script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Linguagua/linguagua_crack.js, requires-body=true, timeout=10, tag=瓜瓜跟读-收据验证
+
+# 兑换码 - 返回成功
+http-response ^https?://api\.lgg\.oranglish\.com/membership/exchange script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Linguagua/linguagua_crack.js, requires-body=true, timeout=10, tag=瓜瓜跟读-兑换码
+
+# Token刷新 - 延长有效期
+http-response ^https?://api\.lgg\.oranglish\.com/refresh/token script-path=https://raw.githubusercontent.com/Leslie159357/Loon-Plugins/main/plugins/Linguagua/linguagua_crack.js, requires-body=true, timeout=10, tag=瓜瓜跟读-Token刷新
+
+[MITM]
+hostname = %APPEND% api.lgg.oranglish.com
